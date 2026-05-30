@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SSRM Revenue Intelligence Dashboard — Live</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SSRM Platform">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — PRECISION DARK INTELLIGENCE
+═══════════════════════════════════════════════ */
+:root {
+  /* Core palette */
+  --void:      #060810;
+  --base:      #0b0f1a;
+  --surface:   #0f1420;
+  --card:      #131929;
+  --card-hi:   #171e2e;
+  --border:    rgba(255,255,255,0.06);
+  --border-hi: rgba(255,255,255,0.12);
+
+  /* Accent system */
+  --gold:      #f0a500;
+  --gold-dim:  rgba(240,165,0,0.08);
+  --gold-glow: rgba(240,165,0,0.2);
+  --sky:       #2db8f5;
+  --sky-dim:   rgba(45,184,245,0.08);
+  --jade:      #00d4a0;
+  --jade-dim:  rgba(0,212,160,0.08);
+  --coral:     #ff5f6d;
+  --coral-dim: rgba(255,95,109,0.08);
+  --violet:    #9b7fff;
+  --violet-dim:rgba(155,127,255,0.08);
+
+  /* Text */
+  --text-1:    #f0f2f7;
+  --text-2:    #8892a4;
+  --text-3:    #4d5870;
+
+  /* Typography */
+  --font-display: 'Outfit', sans-serif;
+  --font-body:    'Space Grotesk', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* Geometry */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text-1);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(45,184,245,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45,184,245,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── MODAL ─────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(6,8,16,0.92);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal {
+  background: var(--card);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  width: 520px; max-width: 96vw;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  position: relative; overflow: hidden;
+}
+.modal::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--sky));
+}
+.modal h2 {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700;
+  color: var(--text-1); letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+.modal p { font-size: 13px; color: var(--text-2); margin-bottom: 24px; line-height: 1.7; }
+.modal-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-hi);
+  color: var(--text-1);
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono); font-size: 12px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.modal-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-glow); }
+.modal-input::placeholder { color: var(--text-3); }
+.btn-modal {
+  width: 100%; margin-top: 8px;
+  background: linear-gradient(135deg, var(--gold), #e09000);
+  color: #000; border: none;
+  padding: 13px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display); font-weight: 700; font-size: 15px;
+  cursor: pointer; letter-spacing: 0.3px;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-modal:hover { opacity: 0.9; transform: translateY(-1px); }
+.modal-err { color: var(--coral); font-size: 11px; font-family: var(--font-mono); margin-top: 8px; min-height: 16px; }
+
+/* ── HEADER ─────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(11,15,26,0.95);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--gold), #c07800);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(240,165,0,0.3);
+  flex-shrink: 0;
+}
+.header-title h1 {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 700;
+  color: var(--text-1); letter-spacing: 0.5px;
+  line-height: 1;
+}
+.header-title p {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-3); letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.live-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  background: var(--jade-dim);
+  border: 1px solid rgba(0,212,160,0.2);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--jade);
+}
+.live-dot {
+  width: 6px; height: 6px;
+  background: var(--jade); border-radius: 50%;
+  animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,212,160,0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(0,212,160,0); }
+}
+.header-date {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--text-2); text-align: right; line-height: 1.5;
+}
+.btn-upload-link {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em;
+  color: var(--sky); text-decoration: none;
+  border: 1px solid rgba(45,184,245,0.25);
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  background: var(--sky-dim);
+  transition: all 0.2s;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-upload-link:hover { background: rgba(45,184,245,0.15); border-color: var(--sky); }
+
+/* FY countdown */
+.fy-countdown { display: flex; gap: 6px; }
+.count-box {
+  background: var(--gold-dim);
+  border: 1px solid rgba(240,165,0,0.2);
+  border-radius: var(--radius-sm);
+  padding: 3px 10px; text-align: center;
+}
+.count-num { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--gold); }
+.count-label { font-size: 8px; color: var(--text-3); font-family: var(--font-mono); letter-spacing: 0.05em; }
+
+/* ── UPLOADER EMBED ─────────────────────────────────── */
+.uploader-embed {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--void);
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+}
+.uploader-embed.active {
+  display: flex;
+}
+.uploader-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.uploader-header h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--gold);
+}
+.uploader-close {
+  background: var(--coral-dim);
+  border: 1px solid var(--coral);
+  color: var(--coral);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.uploader-close:hover {
+  background: var(--coral);
+  color: #000;
+}
+.uploader-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: var(--void);
+}
+
+/* ── LAYOUT ──────────────────────────────────── */
+.container { max-width: 1440px; margin: 0 auto; padding: 24px 32px; position: relative; z-index: 1; }
+.container.uploader-open { opacity: 0.3; pointer-events: none; }
+
+/* ── FILTERS BAR ─────────────────────────────── */
+.filters-bar {
+  display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  margin-bottom: 20px;
+}
+.filter-group { display: flex; flex-direction: column; gap: 5px; }
+.filter-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border-hi);
+  color: var(--text-1);
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-size: 13px;
+  cursor: pointer; min-width: 160px;
+  transition: border-color 0.2s;
+}
+.filter-select:focus { outline: none; border-color: var(--gold); }
+.filter-select option { background: var(--card); }
+.filter-info { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); margin-left: auto; align-self: flex-end; }
+.btn-refresh {
+  background: var(--gold);
+  color: #000; border: none;
+  padding: 8px 20px; border-radius: var(--radius-sm);
+  font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  cursor: pointer; letter-spacing: 0.3px;
+  transition: all 0.2s; align-self: flex-end;
+  box-shadow: 0 2px 12px rgba(240,165,0,0.2);
+}
+.btn-refresh:hover { background: #e09000; box-shadow: 0 4px 20px rgba(240,165,0,0.35); }
+
+/* ── TABS ────────────────────────────────────── */
+.tabs {
+  display: flex; gap: 2px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.tab {
+  flex: 1; padding: 9px 14px;
+  background: transparent; border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  transition: all 0.2s; white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.tab:hover { color: var(--text-1); background: var(--surface); }
+.tab.active {
+  background: var(--gold);
+  color: #000; font-weight: 700;
+  box-shadow: 0 2px 12px rgba(240,165,0,0.3);
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeUp 0.25s ease; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── KPI CARDS ───────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 16px;
+}
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px 18px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.kpi-card:hover { border-color: var(--border-hi); transform: translateY(-1px); }
+.kpi-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  opacity: 0.5;
+}
+.kpi-card.gold { border-top: 2px solid var(--gold); }
+.kpi-card.gold::after { background: var(--gold); }
+.kpi-card.blue { border-top: 2px solid var(--sky); }
+.kpi-card.blue::after { background: var(--sky); }
+.kpi-card.green { border-top: 2px solid var(--jade); }
+.kpi-card.green::after { background: var(--jade); }
+.kpi-card.red { border-top: 2px solid var(--coral); }
+.kpi-card.red::after { background: var(--coral); }
+.kpi-card.violet { border-top: 2px solid var(--violet); }
+.kpi-card.violet::after { background: var(--violet); }
+
+.kpi-icon {
+  font-size: 22px; margin-bottom: 10px; display: block;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+.kpi-label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-3); margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: var(--font-display); font-size: 26px; font-weight: 700;
+  color: var(--text-1); line-height: 1; letter-spacing: -0.5px;
+}
+.kpi-sub {
+  font-size: 11px; color: var(--text-3); margin-top: 6px;
+  font-family: var(--font-mono);
+}
+@media(max-width:900px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+
+/* ── TARGET / PROGRESS ───────────────────────── */
+.target-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px; margin-bottom: 16px;
+}
+.target-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  color: var(--gold); letter-spacing: 0.2px;
+}
+.target-pct {
+  font-family: var(--font-mono); font-size: 30px; font-weight: 600;
+  color: var(--gold); letter-spacing: -1px;
+}
+.progress-bar-wrap {
+  background: var(--surface); border-radius: 4px; height: 8px;
+  overflow: hidden; margin-bottom: 10px;
+}
+.progress-bar-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gold), #ffcf40);
+  border-radius: 4px; transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.target-meta {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--text-3); font-family: var(--font-mono);
+}
+
+/* ── CHART CARDS ─────────────────────────────── */
+.chart-grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 14px; }
+.chart-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 14px; }
+.chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  transition: border-color 0.2s;
+}
+.chart-card:hover { border-color: var(--border-hi); }
+.chart-card.full { grid-column: 1 / -1; }
+.chart-container { position: relative; }
+@media(max-width:900px) { .chart-grid-2, .chart-grid-3 { grid-template-columns: 1fr; } }
+
+/* ── DATA TABLES ─────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 9px 14px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap; background: var(--surface);
+}
+.data-table th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.data-table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.data-table td {
+  padding: 10px 14px; font-size: 13px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--text-2);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,0.02); color: var(--text-1); }
+.data-table td.num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
+.daily-scroll { overflow-x: auto; }
+
+/* Rank medals */
+.rank { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+.rank-1 { color: #f0b429; }
+.rank-2 { color: #8899bb; }
+.rank-3 { color: #a06030; }
+
+/* Chips */
+.chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; border-radius: 4px;
+  font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.chip-green { background: var(--jade-dim); color: var(--jade); border-color: rgba(0,212,160,0.2); }
+.chip-amber { background: var(--gold-dim); color: var(--gold); border-color: rgba(240,165,0,0.2); }
+.chip-blue  { background: var(--sky-dim);  color: var(--sky);  border-color: rgba(45,184,245,0.2); }
+.chip-red   { background: var(--coral-dim);color: var(--coral);border-color: rgba(255,95,109,0.2); }
+.chip-violet { background: var(--violet-dim); color: var(--violet); border-color: rgba(155,127,255,0.2); }
+
+/* Bar inline */
+.bar-inline { display: flex; align-items: center; gap: 8px; }
+.bar-mini { height: 5px; background: linear-gradient(90deg, var(--gold), #e09000); border-radius: 2px; }
+
+/* ── UNIT GRID ────────────────────────────────── */
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px; margin-bottom: 16px;
+}
+.unit-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px; cursor: pointer;
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+.unit-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--gold); opacity: 0;
+  transition: opacity 0.2s;
+}
+.unit-card:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+.unit-card:hover::before, .unit-card.selected::before { opacity: 1; }
+.unit-card.selected { border-color: rgba(240,165,0,0.3); background: var(--gold-dim); }
+.unit-name { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 6px; line-height: 1.3; }
+.unit-rev { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--gold); }
+.unit-txn { font-size: 10px; color: var(--text-3); margin-top: 3px; font-family: var(--font-mono); }
+.unit-rank { float: right; font-family: var(--font-mono); font-size: 10px; color: var(--text-3); }
+
+/* ── SKELETON LOADER ──────────────────────────── */
+.skel {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--card-hi) 50%, var(--surface) 75%);
+  background-size: 200%; animation: skelAnim 1.5s infinite; border-radius: var(--radius-sm); height: 100%;
+}
+@keyframes skelAnim { 0% { background-position: 200%; } 100% { background-position: -200%; } }
+.loading-overlay {
+  position: absolute; inset: 0;
+  background: rgba(6,8,16,0.7);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-lg); z-index: 5;
+}
+.spin {
+  width: 26px; height: 26px;
+  border: 2px solid var(--border-hi); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── FOOTER ───────────────────────────────────── */
+.footer {
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  padding: 14px 32px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: var(--text-3);
+  font-family: var(--font-mono); flex-wrap: wrap; gap: 8px;
+  position: relative; z-index: 1;
+}
+.footer strong { color: var(--text-2); }
+
+/* ── SCROLLBAR ────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--void); }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+</style>
+</head>
+<body>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="modal-overlay" style="display:flex;">
+  <div class="modal">
+    <h2>📮 SSRM Dashboard Setup</h2>
+    <p>Enter your Supabase project URL and key. The dashboard uses the same credentials saved by the uploader — if you've already connected the uploader on this browser, click <strong style="color:var(--gold)">Connect &amp; Load Dashboard</strong> and credentials will auto-fill.</p>
+    <input id="m-url" class="modal-input" type="text" placeholder="https://xxxxxxxxxxxx.supabase.co" />
+    <input id="m-key" class="modal-input" type="text" placeholder="Service role key (same as uploader)" />
+    <div id="m-err" class="modal-err"></div>
+    <button class="btn-modal" onclick="connectSupabase()">🔌 Connect &amp; Load Dashboard</button>
+    <div style="margin-top:14px;font-size:10px;color:var(--text-3);text-align:center;font-family:var(--font-mono);">Settings saved in browser — you won't need to re-enter next time.</div>
+  </div>
+</div>
+
+<!-- UPLOADER EMBED -->
+<div class="uploader-embed" id="uploaderEmbed">
+  <div class="uploader-header">
+    <h3>📤 SSRM Data Upload Terminal</h3>
+    <button class="uploader-close" onclick="closeUploader()">✕ Close Uploader</button>
+  </div>
+  <iframe class="uploader-frame" id="uploaderFrame" src=""></iframe>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-icon">📮</div>
+    <div class="header-title">
+      <h1>HYDERABAD SORTING DIVISION</h1>
+      <p>SSRM REVENUE INTELLIGENCE &nbsp;|&nbsp; LIVE &nbsp;|&nbsp; <span id="hdr-period">—</span></p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="fy-countdown" id="countdown"></div>
+    <div class="live-badge"><div class="live-dot"></div><span id="live-label">CONNECTING</span></div>
+    <div class="header-date" id="headerDate"></div>
+    <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.1em;color:#060810;background:linear-gradient(135deg,#f0a500 0%,#ffd060 60%,#f0a500 100%);border-radius:20px;padding:5px 14px;white-space:nowrap;box-shadow:0 0 12px rgba(240,165,0,0.6),0 0 24px rgba(240,165,0,0.3),inset 0 1px 0 rgba(255,255,255,0.3);">BY B AMBEDKAR RAJU</div>
+    <button onclick="openUploader()" class="btn-upload-link">📤 Upload Data</button>
+  </div>
+</header>
+
+<div class="container" id="mainContainer">
+
+  <!-- FILTERS -->
+  <div class="filters-bar">
+    <div class="filter-group">
+      <div class="filter-label">Business Unit</div>
+      <select class="filter-select" id="fil-unit" onchange="applyFilters()">
+        <option value="ALL">All Units (Division Total)</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Year</div>
+      <select class="filter-select" id="fil-year" onchange="applyFilters()" style="min-width:90px;">
+        <option value="2026">2026</option><option value="2027">2027</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <div class="filter-label">Month</div>
+      <select class="filter-select" id="fil-month" onchange="applyFilters()" style="min-width:110px;">
+        <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+        <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+      </select>
+    </div>
+    <div class="filter-info" id="last-updated">Last updated: —</div>
+    <button class="btn-refresh" onclick="loadData()">⟳ Refresh</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('overview')">📊 Overview</button>
+    <button class="tab" onclick="switchTab('daily')">📅 Daily Trends</button>
+    <button class="tab" onclick="switchTab('products')">📦 Products</button>
+    <button class="tab" onclick="switchTab('customers')">🏢 Customers</button>
+    <button class="tab" onclick="switchTab('units')">🏛️ Unit Rankings</button>
+    <button class="tab" onclick="switchTab('target')">🎯 Target Tracker</button>
+  </div>
+
+  <!-- ════ OVERVIEW ════ -->
+  <div class="tab-panel active" id="tab-overview">
+    <div id="overview-partial-banner" style="display:none;align-items:center;gap:14px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);border-radius:10px;padding:14px 20px;margin-bottom:18px;flex-wrap:wrap;">
+      <span style="font-size:22px;">⚠️</span>
+      <div style="flex:1;min-width:220px;">
+        <div style="font-weight:700;color:#f0a500;font-size:13px;margin-bottom:3px;">Partial data — Products &amp; Customers tabs are empty</div>
+        <div style="color:#8892a4;font-size:12px;line-height:1.6;">A partial delete wiped product/customer aggregates for this month. <strong style="color:#f0f2f7;">Daily KPIs and charts are correct.</strong> To restore, re-upload the surviving dates in <strong style="color:#f0a500;">APPEND mode</strong>. <span class="ovb-dates" style="display:inline;font-family:JetBrains Mono,monospace;font-size:11px;color:#f0a500;"></span></div>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card gold">
+        <span class="kpi-icon">₹</span>
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value" id="kpi-rev">—</div>
+        <div class="kpi-sub">Base Amount (total − tax) &nbsp;|&nbsp; <span id="kpi-base">—</span></div>
+      </div>
+      <div class="kpi-card blue">
+        <span class="kpi-icon">📦</span>
+        <div class="kpi-label">Total Transactions</div>
+        <div class="kpi-value" id="kpi-txn">—</div>
+        <div class="kpi-sub">Articles dispatched</div>
+      </div>
+      <div class="kpi-card green">
+        <span class="kpi-icon">📈</span>
+        <div class="kpi-label">Monthly Target %</div>
+        <div class="kpi-value" id="kpi-pct">—</div>
+        <div class="kpi-sub">vs monthly target of <span id="kpi-monthly-target">—</span></div>
+      </div>
+      <div class="kpi-card red">
+        <span class="kpi-icon">⏳</span>
+        <div class="kpi-label">FY Revenue Remaining</div>
+        <div class="kpi-value" id="kpi-remain">—</div>
+        <div class="kpi-sub">To hit annual target</div>
+      </div>
+    </div>
+
+    <div class="target-section">
+      <div class="target-header">
+        <div>
+          <div class="section-title">Annual Target Progress — FY 2026-27</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:5px;font-family:var(--font-mono);" id="target-unit-label">—</div>
+        </div>
+        <div class="target-pct" id="annual-pct">—</div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="annual-bar"></div></div>
+      <div class="target-meta">
+        <span>FY Start: 1 Apr 2026</span>
+        <span id="rev-achieved-label">—</span>
+        <span id="target-label">—</span>
+        <span>FY End: 31 Mar 2027</span>
+      </div>
+    </div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Daily Revenue Trend</div>
+        <div class="chart-container" style="height:240px"><canvas id="chart-daily-overview"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Booking Source Split</div>
+        <div class="chart-container" style="height:240px"><canvas id="chart-source-pie"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Product Mix — Revenue</div>
+        <div class="chart-container" style="height:220px"><canvas id="chart-product-donut"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Transaction Volume by Product</div>
+        <div class="chart-container" style="height:220px"><canvas id="chart-txn-bar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Top 5 Customers</div>
+        <div class="chart-container" style="height:220px"><canvas id="chart-cust-top5"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ DAILY ════ -->
+  <div class="tab-panel" id="tab-daily">
+    <div class="chart-card full" style="margin-bottom:14px">
+      <div class="section-title" style="margin-bottom:16px;">Daily Revenue + Transactions</div>
+      <div class="chart-container" style="height:300px"><canvas id="chart-daily-full"></canvas></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Daily Transactions</div>
+        <div class="chart-container" style="height:240px"><canvas id="chart-daily-txn"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Cumulative Revenue vs Target Pace</div>
+        <div class="chart-container" style="height:240px"><canvas id="chart-cumulative"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="section-title" style="margin-bottom:16px;">Day-by-Day Revenue Table</div>
+      <div class="daily-scroll"><table class="data-table" id="daily-table"></table></div>
+    </div>
+  </div>
+
+  <!-- ════ PRODUCTS ════ -->
+  <div class="tab-panel" id="tab-products">
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Revenue by Product</div>
+        <div class="chart-container" style="height:280px"><canvas id="chart-prod-rev-bar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Transactions by Product</div>
+        <div class="chart-container" style="height:280px"><canvas id="chart-prod-txn-bar2"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="section-title" style="margin-bottom:16px;">Product Performance Summary</div>
+      <table class="data-table" id="product-table"></table>
+    </div>
+  </div>
+
+  <!-- ════ CUSTOMERS ════ -->
+  <div class="tab-panel" id="tab-customers">
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="section-title" id="cust-bar-title" style="margin-bottom:16px;">Top 12 Customers — Revenue</div>
+        <div class="chart-container" style="height:320px"><canvas id="chart-cust-bar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" id="cust-doughnut-title" style="margin-bottom:16px;">Bulk vs Counter</div>
+        <div class="chart-container" style="height:320px"><canvas id="chart-src-doughnut"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-card full">
+      <div class="section-title" style="margin-bottom:16px;">Customer Leaderboard</div>
+      <table class="data-table" id="customer-table"></table>
+    </div>
+  </div>
+
+  <!-- ════ UNIT RANKINGS ════ -->
+  <div class="tab-panel" id="tab-units">
+    <div class="chart-card full" style="margin-bottom:14px">
+      <div class="section-title" style="margin-bottom:16px;">Unit-wise Revenue Rankings — <span id="unit-period-label">—</span></div>
+      <div class="chart-container" style="height:300px"><canvas id="chart-unit-rank"></canvas></div>
+    </div>
+    <div class="unit-grid" id="unit-cards"></div>
+    <div class="chart-card full">
+      <div class="section-title" style="margin-bottom:16px;">Division Leaderboard</div>
+      <table class="data-table" id="unit-table"></table>
+    </div>
+  </div>
+
+  <!-- ════ TARGET ════ -->
+  <div class="tab-panel" id="tab-target">
+    <div class="kpi-grid">
+      <div class="kpi-card gold">
+        <span class="kpi-icon">🎯</span>
+        <div class="kpi-label">Annual Target</div>
+        <div class="kpi-value" id="t-target">—</div>
+        <div class="kpi-sub" id="t-fy-label">FY 2026-27</div>
+      </div>
+      <div class="kpi-card green">
+        <span class="kpi-icon">✅</span>
+        <div class="kpi-label">Achieved So Far</div>
+        <div class="kpi-value" id="t-achieved">—</div>
+        <div class="kpi-sub" id="t-month-label">—</div>
+      </div>
+      <div class="kpi-card blue">
+        <span class="kpi-icon">📅</span>
+        <div class="kpi-label">Full-Year Projection</div>
+        <div class="kpi-value" id="t-runrate">—</div>
+        <div class="kpi-sub">At current monthly rate × 12</div>
+      </div>
+      <div class="kpi-card red">
+        <span class="kpi-icon">⚠️</span>
+        <div class="kpi-label">Target Gap</div>
+        <div class="kpi-value" id="t-gap">—</div>
+        <div class="kpi-sub">Remaining to achieve annual target</div>
+      </div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Monthly vs Target Pace</div>
+        <div class="chart-container" style="height:280px"><canvas id="chart-target-gauge"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="section-title" style="margin-bottom:16px;">Projected Full-Year Revenue</div>
+        <div class="chart-container" style="height:280px"><canvas id="chart-projection"></canvas></div>
+      </div>
+    </div>
+    <div class="target-section">
+      <div class="section-title">FY 2026-27 Time Remaining</div>
+      <div style="margin-top:18px;display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+        <div id="fy-big-countdown" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+        <div style="font-size:12px;color:var(--text-2);flex:1;line-height:1.7;">
+          <div style="color:var(--text-3);font-family:var(--font-mono);font-size:11px;">Financial Year: 1 April 2026 — 31 March 2027</div>
+          <div style="margin-top:8px;color:var(--sky);">💡 At current rate of <strong id="monthly-rate-text" style="color:var(--text-1)">—</strong>/month, full-year projection is <strong id="projected-text" style="color:var(--text-1)">—</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer class="footer">
+  <div><strong>India Post — Hyderabad Sorting Division</strong> &nbsp;|&nbsp; SSRM Revenue Dashboard &nbsp;|&nbsp; Live v2.0</div>
+  <div id="footer-meta">Supabase backend &nbsp;|&nbsp; Generated: <span id="gen-date"></span></div>
+</footer>
+
+
+<script>
+// ─── MASTER BUSINESS UNITS (exactly matching uploader dropdown) ───
+const BUSINESS_UNITS_MASTER = [
+  { code: 'BNPL_HYDERABAD',            name: 'BNPL Hyderabad',             annual_target_cr: 42 },
+  { code: 'BPC_BOLLARAM',              name: 'BPC Bollaram',               annual_target_cr: 90 },
+  { code: 'BPC_DR_BRAOU',              name: 'BPC DR BRAOU',               annual_target_cr: 3 },
+  { code: 'BPC_JEEDIMETLA',            name: 'BPC Jeedimetla',             annual_target_cr: 75 },
+  { code: 'HYDERABAD_DECCAN_RS_TMO',   name: 'Hyderabad Deccan RS TMO',    annual_target_cr: 3 },
+  { code: 'PBC_AUTONAGAR',             name: 'PBC Autonagar',              annual_target_cr: 35 },
+  { code: 'NSH_COUNTER',               name: 'NSH Counter',                annual_target_cr: 2 },
+  { code: 'SECUNDERABAD_RS_TMO',       name: 'Secunderabad RS TMO',        annual_target_cr: 0.50 },
+  { code: 'NAMPALLY_HYDERABAD_BPC_II', name: 'Nampally Hyderabad BPC II',  annual_target_cr: 31.01 },
+  { code: 'BPC_DEVARAYAMJAL_I_II',     name: 'BPC Devarayamjal I and II',  annual_target_cr: 30 },
+  { code: 'BPC_POCHARAM',              name: 'BPC Pocharam',               annual_target_cr: 10 },
+  { code: 'PBC_AUTONAGAR_COUNTER',     name: 'PBC Autonagar(Counter)',     annual_target_cr: 3 }
+];
+
+// ─── CONFIG ────────────────────────────────────────────────
+let SUPABASE_URL = localStorage.getItem('ssrm_url') || '';
+let SUPABASE_KEY = localStorage.getItem('ssrm_key') || localStorage.getItem('ssrm_anon') || '';
+
+// Pre-populate URL from query param if present
+const urlParams = new URLSearchParams(window.location.search);
+const queryUrl = urlParams.get('supabase_url');
+if (queryUrl && !SUPABASE_URL) {
+  SUPABASE_URL = queryUrl;
+  localStorage.setItem('ssrm_url', queryUrl);
+}
+
+// Show modal if not configured
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  document.getElementById('modal-overlay').style.display = 'flex';
+  if (SUPABASE_URL) document.getElementById('m-url').value = SUPABASE_URL;
+  const savedKey = localStorage.getItem('ssrm_key') || localStorage.getItem('ssrm_anon') || '';
+  if (savedKey) document.getElementById('m-key').value = savedKey;
+} else {
+  document.getElementById('modal-overlay').style.display = 'none';
+  init();
+}
+
+async function connectSupabase() {
+  const url = document.getElementById('m-url').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('m-key').value.trim();
+  const err = document.getElementById('m-err');
+  if (!url || !key) { err.textContent = 'Please enter both URL and key.'; return; }
+  err.textContent = 'Testing connection...';
+  try {
+    const r = await fetch(`${url}/rest/v1/business_units?select=id&limit=1`, {
+      headers: { 'apikey': key, 'Authorization': 'Bearer ' + key }
+    });
+    if (!r.ok) { err.textContent = '❌ Connection failed — check URL and anon key.'; return; }
+    SUPABASE_URL = url; SUPABASE_KEY = key;
+    localStorage.setItem('ssrm_url', url);
+    localStorage.setItem('ssrm_anon', key);
+    localStorage.setItem('ssrm_key', key);
+    document.getElementById('modal-overlay').style.display = 'none';
+    init();
+  } catch(e) {
+    err.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ─── SUPABASE HELPER ───────────────────────────────────────
+async function supa(path) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Accept': 'application/json',
+      'Prefer': 'count=none'
+    }
+  });
+  if (!r.ok) {
+    let errText = await r.text();
+    try { const j = JSON.parse(errText); errText = j.message || j.hint || errText; } catch(_) {}
+    throw new Error(`[${r.status}] ${errText}`);
+  }
+  return r.json();
+}
+
+// ─── STATE ─────────────────────────────────────────────────
+let UNITS = [];
+let DATA  = null;
+let chartInstances = {};
+
+// ─── HELPERS ───────────────────────────────────────────────
+const fmt = (n, dec=2) => {
+  if (n >= 1e7) return '₹' + (n/1e7).toFixed(2) + ' Cr';
+  if (n >= 1e5) return '₹' + (n/1e5).toFixed(2) + ' L';
+  return '₹' + n.toLocaleString('en-IN', {maximumFractionDigits: dec});
+};
+const fmtCr = n => '₹' + (n/1e7).toFixed(3) + ' Cr';
+const fmtNum = n => n.toLocaleString('en-IN');
+function parseLocalDate(d) {
+  if (!d) return new Date();
+  if (typeof d === 'string' && d.match(/^\d{4}-\d{2}-\d{2}/)) {
+    const [y, m, day] = d.slice(0,10).split('-').map(Number);
+    return new Date(y, m - 1, day);
+  }
+  return new Date(d);
+}
+const fmtDate = d => parseLocalDate(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
+const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLORS = ['#f59e0b','#38bdf8','#00d4a0','#ff5f6d','#9b7fff','#ff8c42','#e879f9','#4ade80','#facc15','#60a5fa'];
+
+function normaliseProduct(raw) {
+  if (!raw) return 'Other';
+  const r = String(raw).trim().toUpperCase();
+  if (r.includes('SP_INLAND_DOC')   || r.includes('SPEED POST DOC'))    return 'Speed Post (Document)';
+  if (r.includes('SP_INLAND_PARCEL')|| r.includes('SPEED POST PARCEL'))  return 'Speed Post (Parcel)';
+  if (r.includes('BUSINESS_PARCEL') || r.includes('BUSS PARCEL'))        return 'Business Parcel';
+  if (r.includes('REGISTERED')      || r.includes('RL'))                  return 'Registered Letter';
+  if (r.includes('24_SPEEDPOST')    || r.includes('24_SP'))               return 'Speed Post (24hr)';
+  if (r.includes('ITPS'))                                                  return 'ITPS';
+  if (r.includes('MONEY_ORDER')     || r === 'MO')                        return 'Money Order';
+  if (r.includes('EMO'))                                                   return 'Electronic Money Order';
+  if (r.includes('PARCEL'))                                                return 'Parcel';
+  if (r.includes('SPEED'))                                                 return 'Speed Post';
+  return raw.trim();
+}
+
+function makeChart(id, config) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  chartInstances[id] = new Chart(ctx, config);
+}
+
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#1f2a40';
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ─── UPLOADER EMBED FUNCTIONS ────────────────────────────────
+function openUploader() {
+  const embed = document.getElementById('uploaderEmbed');
+  const frame = document.getElementById('uploaderFrame');
+  const container = document.getElementById('mainContainer');
+  frame.src = 'Uploader.html';
+  embed.classList.add('active');
+  container.classList.add('uploader-open');
+}
+
+function closeUploader() {
+  const embed = document.getElementById('uploaderEmbed');
+  const frame = document.getElementById('uploaderFrame');
+  const container = document.getElementById('mainContainer');
+  embed.classList.remove('active');
+  frame.src = '';
+  container.classList.remove('uploader-open');
+}
+
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'ssrm_upload_complete') {
+    setTimeout(async () => {
+      await autoDetectLatestPeriod();
+      loadData();
+    }, 1800);
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const embed = document.getElementById('uploaderEmbed');
+    if (embed.classList.contains('active')) closeUploader();
+  }
+});
+
+// ─── INIT ──────────────────────────────────────────────────
+async function init() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const fyEnd = new Date('2027-03-31');
+  const diff = fyEnd - now;
+  const days = Math.floor(diff / 86400000);
+  
+  let tempDate = new Date(now);
+  let months = 0;
+  while (true) {
+    const next = new Date(tempDate);
+    next.setMonth(next.getMonth() + 1);
+    if (next > fyEnd) break;
+    months++;
+    tempDate = next;
+  }
+  const remDays = Math.floor((fyEnd - tempDate) / 86400000);
+  const cdHtml = `
+    <div class="count-box"><div class="count-num">${months}</div><div class="count-label">Months</div></div>
+    <div class="count-box"><div class="count-num">${remDays}</div><div class="count-label">Days</div></div>
+    <div class="count-box"><div class="count-num">${days}</div><div class="count-label">Total Days</div></div>`;
+  document.getElementById('countdown').innerHTML = cdHtml;
+  document.getElementById('fy-big-countdown').innerHTML = cdHtml;
+  document.getElementById('headerDate').innerHTML = now.toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}) + '<br>FY 2026-27';
+  document.getElementById('gen-date').textContent = now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+  try {
+    const dbUnits = await supa('business_units?select=id,code,name,annual_target_cr&order=name');
+    if (dbUnits && dbUnits.length > 0) {
+      const masterCodes = BUSINESS_UNITS_MASTER.map(m => m.code);
+      const filtered = dbUnits.filter(db => masterCodes.includes(db.code));
+      UNITS = filtered.map(db => {
+        const master = BUSINESS_UNITS_MASTER.find(m => m.code === db.code);
+        return {
+          id: db.id,
+          code: db.code,
+          name: master ? master.name : db.name,
+          annual_target_cr: master ? master.annual_target_cr : (db.annual_target_cr || 0)
+        };
+      });
+    } else {
+      UNITS = BUSINESS_UNITS_MASTER.map((u, idx) => ({ id: idx + 1, code: u.code, name: u.name, annual_target_cr: u.annual_target_cr }));
+    }
+    
+    const sel = document.getElementById('fil-unit');
+    sel.innerHTML = '<option value="ALL">All Units (Division Total)</option>';
+    UNITS.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.code;
+      opt.textContent = u.name;
+      sel.appendChild(opt);
+    });
+    
+    await autoDetectLatestPeriod();
+    document.getElementById('live-label').textContent = 'LIVE';
+    loadData();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('live-label').textContent = 'ERROR';
+    UNITS = BUSINESS_UNITS_MASTER.map((u, idx) => ({ id: idx + 1, code: u.code, name: u.name, annual_target_cr: u.annual_target_cr }));
+    const sel = document.getElementById('fil-unit');
+    sel.innerHTML = '<option value="ALL">All Units (Division Total)</option>';
+    UNITS.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.code;
+      opt.textContent = u.name;
+      sel.appendChild(opt);
+    });
+    loadData();
+  }
+}
+
+async function autoDetectLatestPeriod() {
+  try {
+    // CRITICAL: filter by the currently selected unit so we never jump to another
+    // unit's latest date (e.g. another unit has May data → dashboard would show May
+    // for this unit which has no May data → "No data available" error).
+    const unitCode = document.getElementById('fil-unit')?.value || 'ALL';
+    let unitFilter = '';
+    if (unitCode !== 'ALL') {
+      const u = UNITS.find(u => u.code === unitCode);
+      if (u) unitFilter = `unit_id=eq.${u.id}&`;
+    }
+
+    const result = await supa(`daily_revenue?${unitFilter}select=txn_date&order=txn_date.desc&limit=1`);
+    if (result && result.length > 0) {
+      const d = parseLocalDate(result[0].txn_date);
+      const latestYear  = d.getFullYear();
+      const latestMonth = d.getMonth() + 1;
+
+      const yearSelect  = document.getElementById('fil-year');
+      const monthSelect = document.getElementById('fil-month');
+
+      if (![...yearSelect.options].some(opt => parseInt(opt.value) === latestYear)) {
+        const opt = document.createElement('option');
+        opt.value = latestYear;
+        opt.textContent = latestYear;
+        yearSelect.appendChild(opt);
+      }
+      yearSelect.value  = latestYear;
+      monthSelect.value = latestMonth;
+      return;
+    }
+
+    // Fallback: no daily_revenue rows for this unit — try upload_runs for year/month hints
+    let runsFilter = '';
+    if (unitCode !== 'ALL') {
+      const u = UNITS.find(u => u.code === unitCode);
+      if (u) runsFilter = `unit_id=eq.${u.id}&`;
+    }
+    const runs = await supa(`upload_runs?${runsFilter}select=period_year,period_month,created_at&order=created_at.desc&limit=50`);
+    if (runs && runs.length > 0) {
+      for (const r of runs) {
+        const yr = parseInt(r.period_year);
+        const mo = parseInt(r.period_month);
+        const startDate = `${yr}-${String(mo).padStart(2,'0')}-01`;
+        const endDate   = mo === 12 ? `${yr+1}-01-01` : `${yr}-${String(mo+1).padStart(2,'0')}-01`;
+        try {
+          const unitCheckFilter = unitCode !== 'ALL' && UNITS.find(u => u.code === unitCode)
+            ? `unit_id=eq.${UNITS.find(u => u.code === unitCode).id}&` : '';
+          const check = await supa(`daily_revenue?${unitCheckFilter}select=txn_date&txn_date=gte.${startDate}&txn_date=lt.${endDate}&limit=1`);
+          if (check && check.length > 0) {
+            const yearSelect  = document.getElementById('fil-year');
+            const monthSelect = document.getElementById('fil-month');
+            if (![...yearSelect.options].some(opt => parseInt(opt.value) === yr)) {
+              const opt = document.createElement('option');
+              opt.value = yr;
+              opt.textContent = yr;
+              yearSelect.appendChild(opt);
+            }
+            yearSelect.value  = yr;
+            monthSelect.value = mo;
+            return;
+          }
+        } catch(e2) { /* skip */ }
+      }
+    }
+  } catch(e) {
+    console.warn('Could not auto-detect period:', e);
+  }
+}
+
+function applyFilters() { loadData(); }
+
+function getFilters() {
+  return {
+    unitCode: document.getElementById('fil-unit').value,
+    year: parseInt(document.getElementById('fil-year').value),
+    month: parseInt(document.getElementById('fil-month').value)
+  };
+}
+
+// ─── LOAD DATA ─────────────────────────────────────────────
+async function loadData() {
+  const { unitCode, year, month } = getFilters();
+  const monthName = MONTHS[month] + ' ' + year;
+  const selectedUnit = UNITS.find(u => u.code === unitCode);
+  document.getElementById('hdr-period').textContent = monthName + (unitCode === 'ALL' ? ' — All Units' : ' — ' + (selectedUnit?.name || unitCode));
+
+  try {
+    let unitIds;
+    if (unitCode === 'ALL') {
+      unitIds = UNITS.map(u => u.id);
+    } else {
+      const u = UNITS.find(u => u.code === unitCode);
+      unitIds = u ? [u.id] : [];
+    }
+
+    if (unitIds.length === 0) { DATA = null; renderAll({}); showNoDataMessage(); return; }
+
+    const unitFilter = `unit_id=in.(${unitIds.join(',')})`;
+    const startDate = `${year}-${String(month).padStart(2,'0')}-01`;
+    let endDate = (month === 12) ? `${year+1}-01-01` : `${year}-${String(month+1).padStart(2,'0')}-01`;
+
+    const [dailyRaw, productsRaw, sourcesRaw, customersRaw] = await Promise.all([
+      supa(`daily_revenue?${unitFilter}&txn_date=gte.${startDate}&txn_date=lt.${endDate}&select=txn_date,revenue,transactions&order=txn_date`).catch(() => []),
+      supa(`product_revenue?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=product_name,revenue,transactions&order=revenue.desc`).catch(() => []),
+      Promise.resolve([]),
+      (async () => {
+        // Step 1: try with is_bulk column
+        try {
+          const rows = await supa(`top_customers?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=customer_name,revenue,transactions,is_bulk&order=revenue.desc&limit=50`);
+          if (rows && rows.length > 0) return rows;
+          console.warn('[SSRM] top_customers returned 0 rows (with is_bulk). Trying without is_bulk...');
+        } catch(e) {
+          console.warn('[SSRM] top_customers (is_bulk) fetch error:', e.message);
+        }
+        // Step 2: retry without is_bulk (column may not exist in DB yet)
+        try {
+          const rows2 = await supa(`top_customers?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=customer_name,revenue,transactions&order=revenue.desc&limit=50`);
+          if (rows2 && rows2.length > 0) return rows2.map(r => ({ ...r, is_bulk: false }));
+          console.warn('[SSRM] top_customers returned 0 rows (without is_bulk). Trying product fallback...');
+        } catch(e2) {
+          console.warn('[SSRM] top_customers (no is_bulk) fetch error:', e2.message);
+        }
+        // Step 3: fallback to product_revenue as proxy
+        try {
+          const prodFallback = await supa(`product_revenue?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=product_name,revenue,transactions&order=revenue.desc&limit=50`);
+          if (prodFallback && prodFallback.length > 0) {
+            console.warn('[SSRM] Using product_revenue as customer proxy (fallback).');
+            return prodFallback.map(p => ({ customer_name: p.product_name || 'Counter Customer', revenue: p.revenue, transactions: p.transactions, is_bulk: false, _isFallback: true }));
+          }
+        } catch(e3) {
+          console.warn('[SSRM] product_revenue fallback error:', e3.message);
+        }
+        console.warn('[SSRM] All customer fetch attempts failed — returning empty.');
+        return [];
+      })()
+    ]);
+
+    if (dailyRaw.length === 0 && productsRaw.length === 0) {
+      DATA = null; renderAll({}); showNoDataMessage();
+      document.getElementById('last-updated').textContent = 'No data for selected period. Try a different month/year.';
+      return;
+    }
+
+    // If daily rows exist but products empty (e.g. after partial-date DELETE wiped aggregates),
+    // still render from daily data and warn the user.
+    if (productsRaw.length === 0 && dailyRaw.length > 0) {
+      document.getElementById('last-updated').textContent =
+        '⚠️ Product/Customer aggregates missing — re-upload this month\'s data in APPEND mode to restore Products & Customers tabs.';
+      const banner = document.getElementById('overview-partial-banner');
+      if (banner) {
+        banner.style.display = 'flex';
+        const span = banner.querySelector('.ovb-dates');
+        if (span && daily.length > 0) span.textContent = `Surviving dates: ${fmtDate(daily[0].date)} → ${fmtDate(daily[daily.length-1].date)}`;
+      }
+    } else {
+      const banner = document.getElementById('overview-partial-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    const dailyMap = {};
+    dailyRaw.forEach(d => {
+      if (!dailyMap[d.txn_date]) dailyMap[d.txn_date] = { revenue: 0, transactions: 0 };
+      dailyMap[d.txn_date].revenue += +d.revenue;
+      dailyMap[d.txn_date].transactions += +d.transactions;
+    });
+    const daily = Object.entries(dailyMap).sort().map(([date, v]) => ({ date, ...v }));
+
+    const prodMap = {};
+    productsRaw.forEach(p => {
+      const cleanName = normaliseProduct(p.product_name);
+      if (!prodMap[cleanName]) prodMap[cleanName] = { revenue: 0, transactions: 0 };
+      prodMap[cleanName].revenue += +p.revenue;
+      prodMap[cleanName].transactions += +p.transactions;
+    });
+    const products = Object.entries(prodMap).sort((a,b) => b[1].revenue - a[1].revenue).map(([name, v]) => ({ name, ...v }));
+
+    const srcMap = {};
+    sourcesRaw.forEach(s => {
+      if (!srcMap[s.source_name]) srcMap[s.source_name] = { revenue: 0, transactions: 0 };
+      srcMap[s.source_name].revenue += +s.revenue;
+      srcMap[s.source_name].transactions += +s.transactions;
+    });
+    const sources = Object.entries(srcMap).map(([name, v]) => ({ name, ...v }));
+
+    const custMap = {};
+    customersRaw.forEach(c => {
+      if (!custMap[c.customer_name]) custMap[c.customer_name] = { revenue: 0, transactions: 0, is_bulk: !!c.is_bulk };
+      custMap[c.customer_name].revenue += +c.revenue;
+      custMap[c.customer_name].transactions += +c.transactions;
+      if (c.is_bulk) custMap[c.customer_name].is_bulk = true;
+    });
+    const customers = Object.entries(custMap).sort((a,b) => b[1].revenue - a[1].revenue).map(([name, v]) => ({ name, ...v }));
+
+    let totalRevenue = daily.reduce((s, d) => s + d.revenue, 0);
+    let totalTransactions = daily.reduce((s, d) => s + d.transactions, 0);
+    if (totalRevenue === 0 && products.length > 0) {
+      totalRevenue      = products.reduce((s, p) => s + p.revenue, 0);
+      totalTransactions = products.reduce((s, p) => s + p.transactions, 0);
+    }
+
+    let annualTargetCr = 0;
+    if (unitCode === 'ALL') {
+      annualTargetCr = UNITS.reduce((s, u) => s + (+u.annual_target_cr || 0), 0);
+    } else {
+      const u = UNITS.find(u => u.code === unitCode);
+      annualTargetCr = u ? (+u.annual_target_cr || 0) : 0;
+    }
+
+    let unitSummary = [];
+    try {
+      let summaries;
+      try {
+        summaries = await supa(`monthly_summary?period_year=eq.${year}&period_month=eq.${month}&select=unit_id,total_revenue,total_transactions`);
+      } catch(viewErr) {
+        const allDaily = await supa(`daily_revenue?txn_date=gte.${startDate}&txn_date=lt.${endDate}&select=unit_id,revenue,transactions`);
+        const aggMap = {};
+        allDaily.forEach(r => {
+          if (!aggMap[r.unit_id]) aggMap[r.unit_id] = { unit_id: r.unit_id, total_revenue: 0, total_transactions: 0 };
+          aggMap[r.unit_id].total_revenue += +r.revenue;
+          aggMap[r.unit_id].total_transactions += +r.transactions;
+        });
+        summaries = Object.values(aggMap);
+      }
+      unitSummary = summaries
+        .filter(s => UNITS.find(u => u.id === s.unit_id))
+        .map(s => {
+          const unit = UNITS.find(u => u.id === s.unit_id);
+          return {
+            unit_name: unit.name,
+            unit_code: unit.code,
+            total_revenue: +s.total_revenue,
+            total_transactions: +s.total_transactions,
+            annual_target_cr: unit.annual_target_cr || 0
+          };
+        });
+    } catch(e) { console.warn('Could not fetch unit summaries', e); }
+
+    DATA = { daily, products, sources, customers, totalRevenue, totalTransactions, annualTargetCr, unitSummary, year, month };
+    document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-IN');
+    renderAll(DATA);
+  } catch(e) {
+    console.error('loadData error:', e);
+    if (document.getElementById('live-label').textContent === 'CONNECTING') {
+      document.getElementById('live-label').textContent = 'ERROR';
+    }
+    // Only show no-data if KPIs were never rendered (kpi-rev still shows — or empty).
+    // If it already has a ₹ value, renderKPIs ran fine — don't wipe it.
+    const kpiRevEl = document.getElementById('kpi-rev');
+    const kpiText  = kpiRevEl ? kpiRevEl.textContent.trim() : '';
+    const hasValue = kpiText && kpiText !== '—' && kpiText !== '' && !kpiText.startsWith('⚠');
+    if (!hasValue) {
+      showNoDataMessage();
+    } else {
+      const lu = document.getElementById('last-updated');
+      if (lu) lu.textContent = '⚠️ Some charts failed to render. KPI data above is still correct.';
+    }
+  }
+}
+
+function showNoDataMessage() {
+  const msg = '⚠️ No data available for the selected period. Please change the month/year or upload data.';
+  document.getElementById('kpi-rev').innerHTML = `<span style="font-size:14px;font-weight:600;color:#f59e0b;line-height:1.5;">${msg}</span>`;
+  document.getElementById('kpi-txn').textContent = '—';
+  document.getElementById('kpi-pct').textContent = '—';
+  document.getElementById('kpi-remain').textContent = '—';
+  document.getElementById('annual-pct').textContent = '—';
+}
+
+// ─── RENDER FUNCTIONS ───────────────────────────────────────
+function renderAll(d) {
+  if (!d) { showNoDataMessage(); return; }
+  // Render unit tab and target tab first (don't affect KPI cards)
+  if (d.month && d.year) {
+    try { renderUnitTab(d); } catch(e) { console.warn('renderUnitTab error:', e); }
+    try { renderTargetTab(d); } catch(e) { console.warn('renderTargetTab error:', e); }
+  }
+  // Render KPIs — must succeed even if chart renders fail below
+  if (typeof d.totalRevenue !== 'undefined') {
+    try { renderKPIs(d); } catch(e) { console.warn('renderKPIs error:', e); }
+  }
+  if (!d.daily || d.daily.length === 0) {
+    document.getElementById('kpi-txn').textContent = '—';
+    document.getElementById('kpi-pct').textContent = '—';
+    document.getElementById('kpi-remain').textContent = '—';
+    document.getElementById('annual-pct').textContent = '—';
+    return;
+  }
+  // Each chart section isolated — a crash in one never wipes KPI cards
+  try { renderOverviewCharts(d); } catch(e) { console.warn('renderOverviewCharts error:', e); }
+  try { renderDailyCharts(d); } catch(e) { console.warn('renderDailyCharts error:', e); }
+  try { renderProductCharts(d); } catch(e) { console.warn('renderProductCharts error:', e); }
+  try { renderCustomerCharts(d); } catch(e) { console.warn('renderCustomerCharts error:', e); }
+}
+
+function renderKPIs(d) {
+  const rev = d.totalRevenue;
+  const txn = d.totalTransactions;
+  const target = d.annualTargetCr * 1e7;
+  const monthlyTarget = target / 12;
+  const pct = monthlyTarget > 0 ? (rev / monthlyTarget * 100).toFixed(1) : '—';
+  const annualPct = target > 0 ? (rev / target * 100).toFixed(2) : '0';
+  const remaining = target - rev;
+
+  document.getElementById('kpi-rev').textContent = fmt(rev);
+  document.getElementById('kpi-base').textContent = 'Excl. GST: ' + fmt(rev);
+  document.getElementById('kpi-txn').textContent = fmtNum(txn);
+  document.getElementById('kpi-pct').textContent = pct + '%';
+  document.getElementById('kpi-monthly-target').textContent = fmtCr(monthlyTarget);
+  document.getElementById('kpi-remain').textContent = fmtCr(remaining);
+  document.getElementById('annual-pct').textContent = annualPct + '%';
+  document.getElementById('rev-achieved-label').textContent = 'Achieved: ' + fmtCr(rev);
+  document.getElementById('target-label').textContent = 'Target: ₹' + d.annualTargetCr.toFixed(2) + ' Cr';
+  document.getElementById('target-unit-label').textContent = `${MONTHS[d.month]} ${d.year} | Target: ₹${d.annualTargetCr.toFixed(2)} Crore`;
+  setTimeout(() => { document.getElementById('annual-bar').style.width = Math.min(annualPct, 100) + '%'; }, 300);
+}
+
+function _ovPlaceholder(canvasId, cls, html) {
+  if (chartInstances[canvasId]) { try { chartInstances[canvasId].destroy(); } catch(e){} delete chartInstances[canvasId]; }
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  el.style.display = 'none';
+  const prev = el.parentElement.querySelector('.' + cls);
+  if (prev) prev.remove();
+  const div = document.createElement('div');
+  div.className = cls;
+  div.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#8892a4;font-family:JetBrains Mono,monospace;font-size:11px;text-align:center;line-height:1.8;padding:12px;';
+  div.innerHTML = html;
+  el.parentElement.appendChild(div);
+}
+function _ovRestore(canvasId, cls) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  el.style.display = '';
+  const prev = el.parentElement.querySelector('.' + cls);
+  if (prev) prev.remove();
+}
+
+function renderOverviewCharts(d) {
+  _ovRestore('chart-daily-overview','daily-nd');
+  makeChart('chart-daily-overview', {
+    type: 'line',
+    data: { labels: d.daily.map(x => fmtDate(x.date)), datasets: [{ label: 'Revenue', data: d.daily.map(x => x.revenue), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.08)', tension: 0.4, fill: true, pointRadius: 2, borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } }, scales: { x: { ticks: { maxTicksLimit: 10, font: { size: 9 } } }, y: { ticks: { callback: v => fmt(v,0), font: { size: 9 } } } } }
+  });
+
+  // Pie chart — NEVER pass empty data to Chart.js (throws TypeError in v4.x)
+  const srcData   = d.sources.length > 0 ? d.sources : d.products.slice(0,5);
+  const srcLabels = srcData.map(x => x.name || x.source_name || '—');
+  const srcVals   = srcData.map(x => x.revenue);
+  if (srcVals.length > 0) {
+    _ovRestore('chart-source-pie','src-nd');
+    makeChart('chart-source-pie', {
+      type: 'pie',
+      data: { labels: srcLabels, datasets: [{ data: srcVals, backgroundColor: ['#f59e0b','#38bdf8','#00d4a0','#ff5f6d','#9b7fff'], borderWidth: 2, borderColor: '#161b28' }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.label+': '+fmt(ctx.raw)+' ('+(d.totalRevenue>0?(ctx.raw/d.totalRevenue*100).toFixed(1):'0')+'%)' } } } }
+    });
+  } else {
+    _ovPlaceholder('chart-source-pie','src-nd','📊 No source data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+  }
+
+  // Doughnut — NEVER pass empty data to Chart.js
+  const top5p = d.products.slice(0,5);
+  const othRev = d.products.slice(5).reduce((s,p)=>s+p.revenue,0);
+  if (top5p.length > 0) {
+    _ovRestore('chart-product-donut','prod-nd');
+    makeChart('chart-product-donut', {
+      type: 'doughnut',
+      data: { labels: [...top5p.map(p=>p.name), othRev>0?'Others':null].filter(Boolean), datasets: [{ data: [...top5p.map(p=>p.revenue), othRev>0?othRev:null].filter(x=>x!==null), backgroundColor: COLORS, borderWidth: 2, borderColor: '#161b28' }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { padding: 8, font: { size: 9 } } }, tooltip: { callbacks: { label: ctx => ctx.label+': '+fmt(ctx.raw) } } } }
+    });
+  } else {
+    _ovPlaceholder('chart-product-donut','prod-nd','📦 No product data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+  }
+
+  // Bar charts — guard empty products
+  if (d.products.length > 0) {
+    _ovRestore('chart-txn-bar','txn-nd');
+    makeChart('chart-txn-bar', {
+      type: 'bar',
+      data: { labels: d.products.slice(0,6).map(p=>p.name.length>20?p.name.slice(0,20)+'…':p.name), datasets: [{ label: 'Transactions', data: d.products.slice(0,6).map(p=>p.transactions), backgroundColor: COLORS, borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v => fmtNum(v), font: { size: 9 } } } } }
+    });
+  } else {
+    _ovPlaceholder('chart-txn-bar','txn-nd','📉 No transaction data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+  }
+
+  if (d.customers && d.customers.length > 0) {
+    _ovRestore('chart-cust-top5','cust-nd');
+    makeChart('chart-cust-top5', {
+      type: 'bar',
+      data: { labels: d.customers.slice(0,5).map(c=>c.name.length>18?c.name.slice(0,18)+'…':c.name), datasets: [{ label: 'Revenue', data: d.customers.slice(0,5).map(c=>c.revenue), backgroundColor: COLORS, borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } }, scales: { x: { ticks: { callback: v => fmt(v,0), font: { size: 9 } } } } }
+    });
+  } else {
+    _ovPlaceholder('chart-cust-top5','cust-nd','🏢 No customer data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+  }
+}
+
+function renderDailyCharts(d) {
+  const dates = d.daily.map(x => fmtDate(x.date));
+  const revs  = d.daily.map(x => x.revenue);
+  const txns  = d.daily.map(x => x.transactions);
+
+  makeChart('chart-daily-full', {
+    type: 'bar',
+    data: { labels: dates, datasets: [
+      { type: 'bar', label: 'Revenue (₹)', data: revs, backgroundColor: 'rgba(245,158,11,0.6)', borderColor: '#f59e0b', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+      { type: 'line', label: 'Transactions', data: txns, borderColor: '#38bdf8', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2, yAxisID: 'y2' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.datasetIndex===0?fmt(ctx.raw):fmtNum(ctx.raw)+' txns' } } }, scales: { y: { ticks: { callback: v=>fmt(v,0) } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v=>fmtNum(v), font: { size: 9 } } } } }
+  });
+
+  makeChart('chart-daily-txn', {
+    type: 'line',
+    data: { labels: dates, datasets: [{ label: 'Transactions', data: txns, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => fmtNum(v) } } } }
+  });
+
+  let cum = 0;
+  const cumRevs = revs.map(r => { cum += r; return cum; });
+  const monthlyTarget = d.annualTargetCr * 1e7 / 12;
+  makeChart('chart-cumulative', {
+    type: 'line',
+    data: { labels: dates, datasets: [
+      { label: 'Cumulative Revenue', data: cumRevs, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.08)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+      { label: 'Target Pace', data: (() => { const daysInMonth = new Date(d.year, d.month, 0).getDate(); return d.daily.map(row => { const dayNum = parseLocalDate(row.date).getDate(); return monthlyTarget / daysInMonth * dayNum; }); })(), borderColor: '#f87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 9 } } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmtCr(ctx.raw) } } }, scales: { y: { ticks: { callback: v => fmtCr(v) } } } }
+  });
+
+  const tbl = document.getElementById('daily-table');
+  const avgRev = d.totalRevenue / (d.daily.length || 1);
+  let html = `<thead><tr><th>#</th><th>Date</th><th class="num">Revenue</th><th class="num">Transactions</th><th class="num">Avg Ticket</th><th>Performance</th></tr></thead><tbody>`;
+  d.daily.forEach((row, i) => {
+    const avg = row.revenue / (row.transactions || 1);
+    const cls = row.revenue >= avgRev ? 'chip-green' : 'chip-amber';
+    const lbl = row.revenue >= avgRev ? '▲ Above Avg' : '▼ Below Avg';
+    html += `<tr><td class="rank">${i+1}</td><td><strong>${parseLocalDate(row.date).toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short'})}</strong></td><td class="num">${fmt(row.revenue)}</td><td class="num">${fmtNum(row.transactions)}</td><td class="num">₹${avg.toFixed(0)}</td><td><span class="chip ${cls}">${lbl}</span></td></tr>`;
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+function renderProductCharts(d) {
+  makeChart('chart-prod-rev-bar', {
+    type: 'bar',
+    data: { labels: d.products.map(p=>p.name.length>25?p.name.slice(0,25)+'…':p.name), datasets: [{ label: 'Revenue', data: d.products.map(p=>p.revenue), backgroundColor: COLORS, borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx=>fmt(ctx.raw) } } }, scales: { x: { ticks: { callback: v=>fmt(v,0), font:{size:9} } } } }
+  });
+
+  makeChart('chart-prod-txn-bar2', {
+    type: 'bar',
+    data: { labels: d.products.map(p=>p.name.length>25?p.name.slice(0,25)+'…':p.name), datasets: [{ label: 'Transactions', data: d.products.map(p=>p.transactions), backgroundColor: COLORS.slice(2), borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v=>fmtNum(v), font:{size:9} } } } }
+  });
+
+  const maxRev = d.products[0]?.revenue || 1;
+  let html = `<thead><tr><th>#</th><th>Product</th><th class="num">Revenue</th><th class="num">Transactions</th><th class="num">Share</th><th class="num">Avg Ticket</th><th>Bar</th></tr></thead><tbody>`;
+  d.products.forEach((p, i) => {
+    const share = (p.revenue / d.totalRevenue * 100).toFixed(1);
+    const avg   = p.revenue / (p.transactions || 1);
+    const barW  = Math.round(p.revenue / maxRev * 100);
+    const rc    = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    html += `<tr><td class="rank ${rc}">${i+1}</td><td><strong>${p.name}</strong></td><td class="num">${fmt(p.revenue)}</td><td class="num">${fmtNum(p.transactions)}</td><td class="num"><span class="chip chip-blue">${share}%</span></td><td class="num">₹${avg.toFixed(0)}</td><td><div class="bar-inline"><div class="bar-mini" style="width:${Math.min(barW,100)}px;max-width:100px"></div><span style="font-size:10px;color:var(--text-2)">${share}%</span></div></td></tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('product-table').innerHTML = html;
+}
+
+function renderCustomerCharts(d) {
+  if (!d.customers || d.customers.length === 0) {
+    const emptyMsg = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:260px;gap:12px;color:var(--text-3);">
+        <div style="font-size:36px;">🏢</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-2);text-align:center;line-height:1.8;">
+          No customer data for this period.<br>
+          <span style="color:var(--gold);">Re-upload</span> this period's file using the uploader (v11+)<br>
+          to populate customer breakdown.
+        </div>
+      </div>`;
+    const _custBar = document.getElementById('chart-cust-bar');
+    const _srcDough = document.getElementById('chart-src-doughnut');
+    if (_custBar && _custBar.parentElement) _custBar.parentElement.innerHTML = emptyMsg;
+    if (_srcDough && _srcDough.parentElement) _srcDough.parentElement.innerHTML = emptyMsg;
+    const _custTable = document.getElementById('customer-table');
+    if (_custTable) _custTable.innerHTML =
+      `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);font-family:var(--font-mono);font-size:12px;">
+        No customer records found. Re-upload this period using the latest uploader to populate this table.
+      </td></tr>`;
+    // Restore canvas visibility for chart-cust-top5 before rendering
+    const _top5Canvas = document.getElementById('chart-cust-top5');
+    if (_top5Canvas) { _top5Canvas.style.display = ''; }
+    makeChart('chart-cust-top5', {
+      type: 'bar',
+      data: { labels: ['No data'], datasets: [{ data: [0], backgroundColor: 'transparent' }] },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          title: { display: true, text: 'No customer data — re-upload to populate', color: '#8892a4', font: { size: 11 } }
+        },
+        scales: { x: { display: false }, y: { display: false } }
+      }
+    });
+    return;
+  }
+
+  const _hasFallback = d.customers.some(c => c._isFallback);
+  const _barTitle = document.getElementById('cust-bar-title');
+  const _doughTitle = document.getElementById('cust-doughnut-title');
+  if (_barTitle)   _barTitle.textContent   = _hasFallback ? 'Top Products — Revenue (Proxy)' : 'Top 12 Customers — Revenue';
+  if (_doughTitle) _doughTitle.textContent = _hasFallback ? 'Product Mix Split'              : 'Bulk vs Counter';
+  if (_hasFallback) {
+    const notice = document.getElementById('cust-fallback-notice') || (() => {
+      const el = document.createElement('div');
+      el.id = 'cust-fallback-notice';
+      el.style.cssText = 'margin:0 0 10px 0;padding:6px 12px;background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.25);border-radius:4px;font-family:var(--font-mono);font-size:10px;color:var(--gold);letter-spacing:0.05em;';
+      el.innerHTML = '⚠ Showing product breakdown as customer proxy — <strong>re-upload with uploader v11+</strong> to populate actual customer data.';
+      const panel = document.getElementById('tab-customers');
+      if (panel) panel.insertBefore(el, panel.firstChild);
+      return el;
+    })();
+    notice.style.display = '';
+  } else {
+    const notice = document.getElementById('cust-fallback-notice');
+    if (notice) notice.style.display = 'none';
+  }
+
+  const top12 = d.customers.slice(0, 12);
+  makeChart('chart-cust-bar', {
+    type: 'bar',
+    data: { labels: top12.map(c=>c.name.length>22?c.name.slice(0,22)+'…':c.name), datasets: [{ label: 'Revenue', data: top12.map(c=>c.revenue), backgroundColor: COLORS, borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx=>fmt(ctx.raw) } } }, scales: { x: { ticks: { callback: v=>fmt(v,0), font:{size:9} } }, y: { ticks: { font:{size:9} } } } }
+  });
+
+  function isBulkCustomer(c) {
+    if (c.is_bulk !== undefined && c.is_bulk !== null) return !!c.is_bulk;
+    const n = (c.name || '').toLowerCase();
+    return n.includes('bulk') || n.includes('contract');
+  }
+
+  let bulkRev = 0, bulkTxn = 0, counterRev = 0, counterTxn = 0, bulkCount = 0, counterCount = 0;
+  d.customers.forEach(c => {
+    if (isBulkCustomer(c)) {
+      bulkRev  += c.revenue;  bulkTxn  += c.transactions; bulkCount++;
+    } else {
+      counterRev += c.revenue; counterTxn += c.transactions; counterCount++;
+    }
+  });
+
+  makeChart('chart-src-doughnut', {
+    type: 'doughnut',
+    data: {
+      labels: [`Bulk (${bulkCount} customers)`, `Counter (${counterCount} customers)`],
+      datasets: [{ data: [bulkRev, counterRev], backgroundColor: ['#f59e0b', '#38bdf8'], borderWidth: 2, borderColor: '#161b28' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ctx.label + ': ' + fmt(ctx.raw) + ' (' + (ctx.raw / (bulkRev + counterRev) * 100).toFixed(1) + '%)' } }
+      }
+    }
+  });
+
+  const _lb_fallback = d.customers.some(c => c._isFallback);
+  const _colHeader = _lb_fallback ? 'Product / Customer' : 'Customer';
+  let html = `<thead><tr><th>#</th><th>${_colHeader}</th><th>Type</th><th class="num">Revenue</th><th class="num">Transactions</th><th class="num">Revenue Share</th><th class="num">Avg Ticket</th></tr></thead><tbody>`;
+  d.customers.slice(0, 15).forEach((c, i) => {
+    const share   = (c.revenue / d.totalRevenue * 100).toFixed(1);
+    const avg     = c.revenue / (c.transactions || 1);
+    const rc      = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const isBulk  = isBulkCustomer(c);
+    const typeTag = _lb_fallback
+      ? `<span class="chip" style="background:rgba(100,100,100,0.1);color:var(--text-2);border:1px solid var(--rim);font-size:9px;">PRODUCT</span>`
+      : (isBulk
+        ? `<span class="chip" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">BULK</span>`
+        : `<span class="chip" style="background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);">COUNTER</span>`);
+    html += `<tr>
+      <td class="rank ${rc}">${i+1}</td>
+      <td><strong>${c.name.length>30?c.name.slice(0,30)+'…':c.name}</strong></td>
+      <td>${typeTag}</td>
+      <td class="num">${fmt(c.revenue)}</td>
+      <td class="num">${fmtNum(c.transactions)}</td>
+      <td class="num"><span class="chip chip-blue">${share}%</span></td>
+      <td class="num">₹${avg.toFixed(0)}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('customer-table').innerHTML = html;
+}
+
+function renderUnitTab(d) {
+  if (!d || !d.month || !d.year) { document.getElementById('unit-period-label').textContent = '—'; return; }
+  let units = [];
+  if (d.unitSummary && d.unitSummary.length > 0) {
+    units = [...d.unitSummary].sort((a,b) => b.total_revenue - a.total_revenue);
+  } else {
+    units = UNITS.map(u => ({
+      unit_name: u.name,
+      unit_code: u.code,
+      total_revenue: 0,
+      total_transactions: 0,
+      annual_target_cr: u.annual_target_cr
+    })).sort((a,b) => b.total_revenue - a.total_revenue);
+  }
+  
+  document.getElementById('unit-period-label').textContent = `${MONTHS[d.month]} ${d.year}`;
+
+  if (units.length > 0) {
+    makeChart('chart-unit-rank', {
+      type: 'bar',
+      data: { labels: units.map(u=>u.unit_name.length>20?u.unit_name.slice(0,20)+'…':u.unit_name), datasets: [{ label: 'Revenue', data: units.map(u=>u.total_revenue), backgroundColor: COLORS, borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx=>fmt(ctx.raw) } } }, scales: { x: { ticks: { callback: v=>fmt(v,0) } } } }
+    });
+  }
+
+  const grid = document.getElementById('unit-cards');
+  grid.innerHTML = units.map((u, i) => {
+    const monthlyTarget = (u.annual_target_cr * 1e7) / 12;
+    const pctAchieved = monthlyTarget > 0 ? (u.total_revenue / monthlyTarget * 100).toFixed(1) : '0';
+    return `
+    <div class="unit-card">
+      <div><span class="unit-rank">#${i+1}</span><div class="unit-name">${u.unit_name}</div></div>
+      <div class="unit-rev">${fmt(u.total_revenue)}</div>
+      <div class="unit-txn">${fmtNum(u.total_transactions)} txns &nbsp;|&nbsp; ${pctAchieved}% of monthly target</div>
+    </div>`;
+  }).join('');
+
+  let html = `<thead><tr><th>#</th><th>Business Unit</th><th class="num">Revenue</th><th class="num">Transactions</th><th class="num">Monthly Target %</th><th class="num">Annual Target</th></tr></thead><tbody>`;
+  units.forEach((u, i) => {
+    const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    const monthlyTarget = (u.annual_target_cr * 1e7) / 12;
+    const pct = monthlyTarget > 0 ? (u.total_revenue / monthlyTarget * 100).toFixed(1) : '0';
+    const cls = parseFloat(pct) >= 100 ? 'chip-green' : parseFloat(pct) >= 80 ? 'chip-amber' : 'chip';
+    html += `<tr><td class="rank ${rc}">${i+1}</td><td><strong>${u.unit_name}</strong></td><td class="num">${fmt(u.total_revenue)}</td><td class="num">${fmtNum(u.total_transactions)}</td><td class="num"><span class="chip ${cls}">${pct}%</span></td><td class="num">₹${(u.annual_target_cr||0).toFixed(2)} Cr</td></tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('unit-table').innerHTML = html;
+}
+
+function renderTargetTab(d) {
+  const rev = d.totalRevenue;
+  const target = d.annualTargetCr * 1e7;
+  const monthlyTarget = target / 12;
+  const projectedAnnual = rev * 12;
+
+  document.getElementById('t-target').textContent   = '₹' + d.annualTargetCr.toFixed(2) + ' Cr';
+  document.getElementById('t-achieved').textContent = fmtCr(rev);
+  document.getElementById('t-runrate').textContent  = fmtCr(projectedAnnual);
+  document.getElementById('t-gap').textContent      = fmtCr(target - rev);
+  
+  const fyMonth = d.month >= 4 ? d.month - 3 : d.month + 9;
+  document.getElementById('t-month-label').textContent = MONTHS[d.month] + ' ' + d.year + ' (Month ' + fyMonth + ' of 12)';
+  document.getElementById('monthly-rate-text').textContent = fmtCr(rev);
+  document.getElementById('projected-text').textContent    = fmtCr(projectedAnnual);
+
+  makeChart('chart-target-gauge', {
+    type: 'doughnut',
+    data: { labels: ['Achieved','Remaining'], datasets: [{ data: [Math.min(rev,target), Math.max(0,target-rev)], backgroundColor: ['#34d399','#1f2a40'], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx=>ctx.label+': '+fmtCr(ctx.raw) } } } }
+  });
+
+  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+  const actuals = months.map((_, i) => i === 0 ? rev : null);
+  const projections = months.map((_, i) => rev);
+  const targets = months.map(() => monthlyTarget);
+
+  makeChart('chart-projection', {
+    type: 'bar',
+    data: { labels: months, datasets: [
+      { label: 'Actual', data: actuals, backgroundColor: '#34d399', borderRadius: 4 },
+      { label: 'Projected', data: projections, backgroundColor: 'rgba(245,158,11,0.3)', borderColor: '#f59e0b', borderWidth: 1, borderRadius: 4 },
+      { type: 'line', label: 'Monthly Target', data: targets, borderColor: '#f87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 9 } } }, tooltip: { callbacks: { label: ctx=>ctx.dataset.label+': '+fmtCr(ctx.raw||0) } } }, scales: { y: { ticks: { callback: v => fmtCr(v) } } } }
+  });
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  
+  const tabBtn = document.querySelector(`.tab[onclick="switchTab('${name}')"]`);
+  if (tabBtn) tabBtn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.error('SW registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
