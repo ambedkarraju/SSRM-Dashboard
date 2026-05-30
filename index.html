@@ -4,12 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SSRM Revenue Intelligence Dashboard — Live</title>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0b0f1a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SSRM Platform">
-<link rel="apple-touch-icon" href="./icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -217,7 +211,7 @@ body::before {
 .count-num { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--gold); }
 .count-label { font-size: 8px; color: var(--text-3); font-family: var(--font-mono); letter-spacing: 0.05em; }
 
-/* ── UPLOADER EMBED ─────────────────────────────────── */
+/* ── uploader EMBED ─────────────────────────────────── */
 .uploader-embed {
   position: fixed;
   top: 64px;
@@ -564,11 +558,11 @@ body::before {
   </div>
 </div>
 
-<!-- UPLOADER EMBED -->
+<!-- uploader EMBED -->
 <div class="uploader-embed" id="uploaderEmbed">
   <div class="uploader-header">
     <h3>📤 SSRM Data Upload Terminal</h3>
-    <button class="uploader-close" onclick="closeUploader()">✕ Close Uploader</button>
+    <button class="uploader-close" onclick="closeuploader()">✕ Close uploader</button>
   </div>
   <iframe class="uploader-frame" id="uploaderFrame" src=""></iframe>
 </div>
@@ -587,7 +581,7 @@ body::before {
     <div class="live-badge"><div class="live-dot"></div><span id="live-label">CONNECTING</span></div>
     <div class="header-date" id="headerDate"></div>
     <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.1em;color:#060810;background:linear-gradient(135deg,#f0a500 0%,#ffd060 60%,#f0a500 100%);border-radius:20px;padding:5px 14px;white-space:nowrap;box-shadow:0 0 12px rgba(240,165,0,0.6),0 0 24px rgba(240,165,0,0.3),inset 0 1px 0 rgba(255,255,255,0.3);">BY B AMBEDKAR RAJU</div>
-    <button onclick="openUploader()" class="btn-upload-link">📤 Upload Data</button>
+    <button onclick="openuploader()" class="btn-upload-link">📤 Upload Data</button>
   </div>
 </header>
 
@@ -971,8 +965,8 @@ Chart.defaults.borderColor = '#1f2a40';
 Chart.defaults.font.family = "'JetBrains Mono', monospace";
 Chart.defaults.font.size = 11;
 
-// ─── UPLOADER EMBED FUNCTIONS ────────────────────────────────
-function openUploader() {
+// ─── uploader EMBED FUNCTIONS ────────────────────────────────
+function openuploader() {
   const embed = document.getElementById('uploaderEmbed');
   const frame = document.getElementById('uploaderFrame');
   const container = document.getElementById('mainContainer');
@@ -981,7 +975,7 @@ function openUploader() {
   container.classList.add('uploader-open');
 }
 
-function closeUploader() {
+function closeuploader() {
   const embed = document.getElementById('uploaderEmbed');
   const frame = document.getElementById('uploaderFrame');
   const container = document.getElementById('mainContainer');
@@ -1002,7 +996,7 @@ window.addEventListener('message', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     const embed = document.getElementById('uploaderEmbed');
-    if (embed.classList.contains('active')) closeUploader();
+    if (embed.classList.contains('active')) closeuploader();
   }
 });
 
@@ -1767,13 +1761,19 @@ function switchTab(name) {
 }
 </script>
 <script>
+  // Check if service workers are supported by the user's browser
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.error('SW registration failed:', err));
+        .then((registration) => {
+          console.log('Service Worker registered successfully with scope:', registration.scope);
+        })
+        .catch((error) => {
+          console.error('Service Worker registration failed:', error);
+        });
     });
   }
-</script>
+</body>
+</html>
 </body>
 </html>
