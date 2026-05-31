@@ -945,97 +945,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 }
 
 /* Upload History Table Styles */
-.history-wrapper {
-  overflow-x: auto;
-}
-.history-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  min-width: 1000px;
-}
-.history-table th {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text2);
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--rim);
-  text-align: left;
-  background: var(--deep);
-  white-space: nowrap;
-}
-.history-table td {
-  padding: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
-  color: var(--text2);
-  font-family: var(--body);
-  font-size: 12px;
-}
-.history-table tr:hover td {
-  background: rgba(255,255,255,0.02);
-}
-.history-table .serial {
-  color: var(--text3);
-  font-family: var(--mono);
-  font-size: 11px;
-  text-align: center;
-}
-.history-table .unit-name {
-  color: var(--ember);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-}
-.mode-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.mode-badge.append {
-  background: var(--jade-dim);
-  color: var(--jade);
-  border: 1px solid rgba(31,212,160,0.4);
-}
-.mode-badge.replace {
-  background: var(--crimson-dim);
-  color: var(--crimson);
-  border: 1px solid rgba(224,84,84,0.4);
-}
-.mode-badge.delete {
-  background: #3a1010;
-  color: #ff8888;
-  border: 1px solid #8b1a1a;
-}
-.status-success {
-  color: var(--jade);
-  font-weight: 500;
-}
-.date-range {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text);
-  white-space: nowrap;
-}
-.rows-count {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--sky);
-  text-align: right;
-  white-space: nowrap;
-}
-.uploader-name {
-  color: var(--text);
-  font-weight: 500;
-}
+
 
 .terminal {
   background: #030508;
@@ -1647,18 +1557,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
     </div>
   </div>
 
-  <!-- UPLOAD HISTORY - Bottom section with improved format -->
-  <div class="panel">
-    <div class="panel-head">
-      <div class="panel-title"><span class="htick" style="background:var(--sky);box-shadow:0 0 6px var(--sky);"></span>Upload History</div>
-      <div style="display:flex;align-items:center;gap:10px"><div class="panel-tag">Newest First ▼</div><button onclick="loadHistory(true)" style="font-family:var(--mono);font-size:9px;letter-spacing:.06em;background:var(--sky-dim);color:var(--sky);border:1px solid rgba(78,169,245,0.3);border-radius:3px;padding:3px 10px;cursor:pointer;">&#8635; REFRESH</button></div>
-    </div>
-    <div class="panel-body" style="padding:0; overflow-x:auto;">
-      <div id="historyContainer">
-        <div class="empty-msg">— click CONNECT to get started —</div>
-      </div>
-    </div>
-  </div>
+
 
 </div><!-- end tabUpload shell -->
 
@@ -2019,13 +1918,13 @@ function formatDateRange(start, end) {
     const parts = dateStr.slice(0, 10).split('-');
     if (parts.length === 3) {
       const [yr, mo, dy] = parts;
-      return `${dy.padStart(2,'0')}-${mo.padStart(2,'0')}-${yr}`;
+      return `${dy.padStart(2,'0')}.${mo.padStart(2,'0')}.${yr}`;
     }
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getFullYear()}`;
+    return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()}`;
   };
-  return `${formatDate(start)} TO ${formatDate(end)}`;
+  return `${formatDate(start)} to ${formatDate(end)}`;
 }
 
 function formatDateTime(dateStr) {
@@ -2033,7 +1932,8 @@ function formatDateTime(dateStr) {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+    const yy = String(d.getFullYear()).slice(-2);
+    return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${yy} ${d.getHours().toString().padStart(2,'0')}.${d.getMinutes().toString().padStart(2,'0')}.${d.getSeconds().toString().padStart(2,'0')}`;
   } catch(e) {
     return dateStr;
   }
@@ -2119,10 +2019,6 @@ async function testAndConnect(url,key){
       // before querying upload_runs; otherwise 200 ms is enough.
       const _postAction = sessionStorage.getItem('ssrm_post_action_reload') === '1';
       if (_postAction) sessionStorage.removeItem('ssrm_post_action_reload');
-      // Wait longer after an upload/delete action so Supabase has time to replicate
-      // the new upload_runs record before loadHistory queries it (was 4000ms — still too short
-      // for multi-session units where a new POST record must beat the old one in id.desc order).
-      setTimeout(() => { if (isConnected) loadHistory(true); }, _postAction ? 7000 : 200);
       return true; 
     } else { 
       isConnected=false; 
@@ -2139,316 +2035,6 @@ async function testAndConnect(url,key){
     document.getElementById('connStatusBadge').innerHTML = '🔴 CONNECTION ERROR';
     return false;
   }
-}
-
-// All 12 master business units — same list as uploader dropdown
-const MASTER_UNITS = [
-  'BNPL_HYDERABAD', 'BPC_BOLLARAM', 'BPC_DR_BRAOU', 'BPC_JEEDIMETLA',
-  'HYDERABAD_DECCAN_RS_TMO', 'PBC_AUTONAGAR', 'NSH_COUNTER',
-  'SECUNDERABAD_RS_TMO', 'NAMPALLY_HYDERABAD_BPC_II',
-  'BPC_DEVARAYAMJAL_I_II', 'BPC_POCHARAM', 'PBC_AUTONAGAR_COUNTER'
-];
-
-let _historyAutoRefreshTimer = null;
-let _historyBlockedUntil = 0;
-
-async function loadHistory(force = false) {
-  if (!isConnected) {
-    document.getElementById('historyContainer').innerHTML = '<div class="empty-msg">— connect to Supabase first —</div>';
-    return;
-  }
-  if (!force && Date.now() < _historyBlockedUntil) {
-    clearTimeout(_historyAutoRefreshTimer);
-    const waitMs = Math.max(_historyBlockedUntil - Date.now() + 1000, 5000);
-    _historyAutoRefreshTimer = setTimeout(() => { if (isConnected) loadHistory(true); }, waitMs);
-    return;
-  }
-  const container = document.getElementById('historyContainer');
-
-  try {
-    // 1. Fetch all business units from DB
-    const unitRes = await supaFetch('GET', 'business_units?select=id,code,name');
-    const unitMap = {}; // id → name
-    const codeToId = {}; // code → id
-    if (unitRes.ok && unitRes.data) {
-      unitRes.data.forEach(u => {
-        unitMap[u.id] = u.name || u.code || String(u.id);
-        codeToId[u.code] = u.id;
-      });
-    }
-
-    // 2. Fetch the definitive latest run per unit using id.desc (auto-increment = insertion order).
-    //    This is immune to created_at ties (bulk imports share identical timestamps).
-    //    Then fetch ALL runs for cumulative range + live-data detection.
-    const lastActionByUnit      = {}; // unit_id → single latest run
-    const cumulativeRangeByUnit = {}; // unit_id → { minStart, maxEnd } from non-delete runs only
-    const hasLiveDataByUnit     = {}; // unit_id → true if ANY non-delete run exists
-
-    const unitIds = Object.values(codeToId);
-    if (unitIds.length > 0) {
-      const inFilter = unitIds.join(',');
-
-      // ── Step A: find the definitive latest ACTIVE run per unit ──
-      // Strategy: fetch ALL runs for each unit, then pick the best one in JS.
-      // "Best" = most recent non-delete run, ranked by:
-      //   1. created_at desc (newest timestamp) — handles normal uploads
-      //   2. id desc as tiebreaker — handles null created_at (legacy bulk imports)
-      // This avoids the id.desc trap where a legacy bulk record has a higher id than
-      // a newer APPEND because Supabase sequences don't reset between sessions.
-      await Promise.all(unitIds.map(async uid => {
-        const r = await supaFetch('GET',
-          `upload_runs?select=id,unit_id,period_year,period_month,period_start,period_end,uploaded_by,row_count,session_rows,status,created_at,uploaded_at&unit_id=eq.${uid}&order=id.desc&limit=50`
-        );
-        if (r.ok && r.data?.length) {
-          const allUnitRuns = r.data;
-          // Separate active (non-delete) runs from delete sentinels
-          const activeRuns = allUnitRuns.filter(r => r.status !== 'delete');
-          const pool = activeRuns.length ? activeRuns : allUnitRuns;
-          // Sort by uploaded_at first (explicit timestamp set by app on every new upload).
-          // Fall back to created_at (Supabase auto-column), then id desc for legacy records.
-          pool.sort((a, b) => {
-            const aTs = a.uploaded_at || a.created_at;
-            const bTs = b.uploaded_at || b.created_at;
-            const aHas = !!aTs, bHas = !!bTs;
-            if (aHas && bHas) return new Date(bTs) - new Date(aTs);
-            if (aHas && !bHas) return -1;  // a has timestamp → a is newer
-            if (!aHas && bHas) return 1;   // b has timestamp → b is newer
-            return b.id - a.id;            // both null → fall back to id desc
-          });
-          lastActionByUnit[uid] = pool[0];
-          console.debug(`[SSRM] Latest run unit=${uid}: id=${pool[0].id} status=${pool[0].status} uploaded_at=${pool[0].uploaded_at} created_at=${pool[0].created_at}`);
-        }
-      }));
-
-      // ── Step B: fetch ALL runs (all units) to compute cumulative live date range ──
-      const allRes = await supaFetch('GET',
-        `upload_runs?select=id,unit_id,period_year,period_month,period_start,period_end,status,session_rows&unit_id=in.(${inFilter})&order=id.asc&limit=5000`
-      );
-      const allRuns = (allRes.ok && allRes.data) ? allRes.data : [];
-
-      allRuns.forEach(run => {
-        // Cumulative date range: APPEND/upload runs only — delete runs represent removed data
-        const isDeleteRun = (run.status === 'delete');
-        if (!isDeleteRun) {
-          hasLiveDataByUnit[run.unit_id] = true;
-          const key = `${run.unit_id}_${run.period_year}_${run.period_month}`;
-          if (!cumulativeRangeByUnit[key]) {
-            cumulativeRangeByUnit[key] = { minStart: run.period_start, maxEnd: run.period_end };
-          } else {
-            const r = cumulativeRangeByUnit[key];
-            if (run.period_start && (!r.minStart || run.period_start < r.minStart)) r.minStart = run.period_start;
-            if (run.period_end   && (!r.maxEnd   || run.period_end   > r.maxEnd))   r.maxEnd   = run.period_end;
-          }
-        }
-      });
-
-      // ── Step C: attach cumulative range + live flag to each unit's latest run ──
-      // Use the run's own period_start/period_end when they are valid (modern records).
-      // Only fall back to cumulativeRangeByUnit for legacy records with null periods.
-      Object.keys(lastActionByUnit).forEach(uid => {
-        const run = lastActionByUnit[uid];
-        const key = `${uid}_${run.period_year}_${run.period_month}`;
-        const cr  = cumulativeRangeByUnit[key];
-        run._hasLiveData = !!hasLiveDataByUnit[uid];
-        // Mark as legacy: no created_at AND no real uploaded_by = bulk import record
-        run._isLegacy = !run.uploaded_at && !run.created_at && (!run.uploaded_by || run.uploaded_by === 'Unknown');
-        // Prefer the run's own stored period (accurate for modern records).
-        // Fall back to computed cumulative range only when period fields are null.
-        if (run.period_start && run.period_end) {
-          run._cumulativeStart = run.period_start;
-          run._cumulativeEnd   = run.period_end;
-        } else if (cr) {
-          run._cumulativeStart = cr.minStart;
-          run._cumulativeEnd   = cr.maxEnd;
-        } else {
-          run._cumulativeStart = null;
-          run._cumulativeEnd   = null;
-        }
-      });
-
-      // ── Step D: ACTUAL DB STATUS — query daily_revenue row counts per unit ──
-      // This is the ground-truth check: it directly counts rows in daily_revenue,
-      // overriding any inference from upload_runs.status flags which can be stale
-      // (e.g. manual DB edits, partial deletes outside the app, etc.)
-      await Promise.all(unitIds.map(async uid => {
-        try {
-          const dr = await supaFetch('GET',
-            `daily_revenue?unit_id=eq.${uid}&select=unit_id&limit=1`
-          );
-          // If at least one row exists → data is truly present in DB
-          const actuallyHasRows = dr.ok && Array.isArray(dr.data) && dr.data.length > 0;
-          if (lastActionByUnit[uid]) {
-            lastActionByUnit[uid]._dbRowsConfirmed = actuallyHasRows;
-          } else if (actuallyHasRows) {
-            // Unit has daily_revenue rows but no upload_runs record (edge case)
-            lastActionByUnit[uid] = {
-              unit_id: uid, status: 'append',
-              _hasLiveData: true, _dbRowsConfirmed: true,
-              _cumulativeStart: null, _cumulativeEnd: null,
-              created_at: null, row_count: null, uploaded_by: '—',
-              period_year: null, period_month: null
-            };
-          }
-        } catch(e) { /* non-fatal — fall back to flag-based status */ }
-      }));
-
-      // ── Step E: HEAL MISSING PERIOD & ROW COUNT from daily_revenue directly ──
-      // ONLY fires for legacy records with null period or null row_count.
-      // All queries are SCOPED to the run's period_year/period_month to prevent
-      // cross-month contamination (e.g. summing Apr+May when only May is relevant).
-      await Promise.all(unitIds.map(async uid => {
-        const run = lastActionByUnit[uid];
-        if (!run) return;
-        const needsPeriodHeal  = !run._cumulativeStart || !run._cumulativeEnd;
-        // Only heal row count if BOTH row_count AND session_rows are missing/zero
-        const needsRowHeal     = (run.row_count == null || run.row_count === 0)
-                               && (run.session_rows == null || run.session_rows === 0);
-        // Only heal uploader when genuinely blank — never overwrite real values like "Manager"
-        const needsUploaderHeal = !run.uploaded_by || run.uploaded_by === 'Unknown';
-
-        // Skip heal entirely if period and row count are already good
-        if (!needsPeriodHeal && !needsRowHeal) return;
-
-        // Scope all DB queries to the run's own month to avoid cross-month aggregation
-        const py = run.period_year;
-        const pm = run.period_month;
-        const mStart = (py && pm) ? `${py}-${String(pm).padStart(2,'0')}-01` : null;
-        const mEnd   = (py && pm) ? (pm === 12 ? `${py+1}-01-01` : `${py}-${String(pm+1).padStart(2,'0')}-01`) : null;
-        const scope  = mStart ? `&txn_date=gte.${mStart}&txn_date=lt.${mEnd}` : '';
-
-        try {
-          const [minRes, maxRes, sumRes] = await Promise.all([
-            supaFetch('GET', `daily_revenue?unit_id=eq.${uid}&select=txn_date${scope}&order=txn_date.asc&limit=1`),
-            supaFetch('GET', `daily_revenue?unit_id=eq.${uid}&select=txn_date${scope}&order=txn_date.desc&limit=1`),
-            supaFetch('GET', `daily_revenue?unit_id=eq.${uid}&select=transactions${scope}`)
-          ]);
-          if (needsPeriodHeal && minRes.ok && minRes.data?.length) {
-            run._cumulativeStart = minRes.data[0].txn_date;
-            run._cumulativeEnd   = maxRes.data?.[0]?.txn_date || minRes.data[0].txn_date;
-            run._periodFromDB    = true;
-          }
-          if ((needsRowHeal || run._periodFromDB) && sumRes.ok && sumRes.data?.length) {
-            run._dbRowCount = sumRes.data.reduce((s, r) => s + (r.transactions || 0), 0);
-          }
-          if (needsUploaderHeal) {
-            run.uploaded_by = '— (legacy)';
-          }
-        } catch(e) { /* non-fatal */ }
-      }));
-    }
-
-    // 4. Build rows for all 12 master units
-    const now = new Date();
-    const refreshTime = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-
-    let html = '<div class="history-wrapper"><table class="history-table"><thead><tr>';
-    html += '<th>#</th>';
-    html += '<th>BUSINESS UNIT</th>';
-    html += '<th>LAST ACTION</th>';
-    html += '<th>DATE &amp; TIME</th>';
-    html += '<th>PERIOD</th>';
-    html += '<th>ROWS</th>';
-    html += '<th>UPLOADED BY</th>';
-    html += '<th>DB STATUS</th>';
-    html += '</tr></thead><tbody>';
-
-    let filledCount = 0;
-
-    MASTER_UNITS.forEach((code, index) => {
-      const unitId = codeToId[code];
-      const unitName = unitId ? (unitMap[unitId] || code) : code;
-      const run = unitId ? lastActionByUnit[unitId] : null;
-
-      if (run) {
-        filledCount++;
-        let modeValue = run.status || 'append';
-        if (modeValue === 'ok' || modeValue === 'OK' || modeValue === 'success') modeValue = 'append';
-        const modeDisplay = getModeDisplayName(modeValue);
-        const modeClass   = getModeBadgeClass(modeValue);
-
-        // PERIOD: use cumulative live range; if null, Step E may have healed it from daily_revenue
-        const liveStart  = run._cumulativeStart;
-        const liveEnd    = run._cumulativeEnd;
-        const dateRange  = (liveStart && liveEnd)
-          ? formatDateRange(liveStart, liveEnd) + (run._periodFromDB ? ' <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">(from DB)</span>' : '')
-          : '—';
-
-        // Date & Time: prefer uploaded_at (explicit app timestamp) over created_at (Supabase auto).
-        // Legacy bulk-import records have neither — show — for those.
-        const uploadedAt  = run.uploaded_at ? formatDateTime(run.uploaded_at)
-                          : run.created_at  ? formatDateTime(run.created_at)
-                          : '—';
-
-        // Rows: prefer session_rows (rows THIS action added) over cumulative row_count.
-        // session_rows requires the DB column — falls back gracefully to row_count or healed DB count.
-        const displayRows = (run.session_rows != null && run.session_rows > 0) ? parseInt(run.session_rows)
-                          : run._dbRowCount != null   ? run._dbRowCount
-                          : (run.row_count != null    ? parseInt(run.row_count) : null);
-        const rowCount    = displayRows != null
-          ? displayRows.toLocaleString('en-IN')
-          : '—';
-        const uploadedBy  = run.uploaded_by || '—';
-
-        // DB STATUS: use the ground-truth daily_revenue probe (_dbRowsConfirmed).
-        // Fall back to _hasLiveData (run-flag based) only if the probe did not run.
-        const dbProbeRan  = typeof run._dbRowsConfirmed === 'boolean';
-        const hasLive     = dbProbeRan ? run._dbRowsConfirmed : !!run._hasLiveData;
-        // Show a mismatch warning when upload_runs says "live" but DB has no rows (or vice-versa)
-        const flagSaysLive = !!run._hasLiveData;
-        const mismatch    = dbProbeRan && (hasLive !== flagSaysLive);
-        let dataStatusHtml;
-        if (!hasLive) {
-          dataStatusHtml = `<span style="color:#ff8888;font-family:var(--mono);font-size:10px;">⛔ NO DATA IN DB</span>`;
-        } else if (mismatch) {
-          // Rows exist in daily_revenue but upload_runs status said "no live data" — stale flag
-          dataStatusHtml = `<span style="color:var(--ember);font-family:var(--mono);font-size:10px;" title="Rows found in daily_revenue but upload history flags are inconsistent. DB is the truth.">⚠ DATA (stale log)</span>`;
-        } else {
-          dataStatusHtml = `<span style="color:var(--jade);font-family:var(--mono);font-size:10px;">✓ DATA IN DB</span>`;
-        }
-
-        html += `<tr>`;
-        html += `<td class="serial">${index + 1}</td>`;
-        html += `<td class="unit-name" title="${unitName}">${unitName.length > 32 ? unitName.slice(0, 30) + '…' : unitName}</td>`;
-        html += `<td><span class="mode-badge ${modeClass}">${modeDisplay}</span></td>`;
-        html += `<td style="font-family:var(--mono);font-size:10px;color:var(--text2);white-space:nowrap">${uploadedAt}</td>`;
-        html += `<td class="date-range">${dateRange}</td>`;
-        html += `<td class="rows-count">${rowCount}</td>`;
-        html += `<td class="uploader-name">${uploadedBy}</td>`;
-        html += `<td>${dataStatusHtml}</td>`;
-        html += `</tr>`;
-      } else {
-        // Unit exists in master but has NO record in upload_runs — also check daily_revenue directly
-        const directCheck = unitId ? lastActionByUnit[unitId] : null;
-        const orphanRows  = directCheck?._dbRowsConfirmed === true;
-        html += `<tr>`;
-        html += `<td class="serial">${index + 1}</td>`;
-        html += `<td class="unit-name">${unitName}</td>`;
-        html += `<td><span class="mode-badge" style="background:rgba(255,255,255,0.04);color:var(--text3);border:1px solid var(--rim);">—</span></td>`;
-        html += `<td style="font-family:var(--mono);font-size:10px;color:var(--text3);">—</td>`;
-        html += `<td class="date-range" style="color:var(--text3);">—</td>`;
-        html += `<td class="rows-count" style="color:var(--text3);">—</td>`;
-        html += `<td class="uploader-name" style="color:var(--text3);">—</td>`;
-        html += orphanRows
-          ? `<td><span style="color:var(--ember);font-family:var(--mono);font-size:10px;" title="daily_revenue rows found but no upload_runs record exists — orphan data.">⚠ ORPHAN DATA</span></td>`
-          : `<td><span style="color:var(--text3);font-family:var(--mono);font-size:10px;">⚪ NEVER UPLOADED</span></td>`;
-        html += `</tr>`;
-      }
-    });
-
-    html += '</tbody></table></div>';
-    html += `<div style="text-align:right;font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px;padding-right:4px;">Last refreshed: ${refreshTime} &nbsp;·&nbsp; DB status verified live &nbsp;·&nbsp; Auto-refreshes every 60s</div>`;
-    container.innerHTML = html;
-
-    addLog(`📋 History loaded — ${filledCount}/12 units have data — DB status verified directly from daily_revenue. Updated: ${refreshTime}`, 'ok');
-
-  } catch(e) {
-    container.innerHTML = '<div class="empty-msg" style="color:var(--crimson)">❌ Error loading history: ' + e.message + '</div>';
-    console.error('loadHistory error:', e);
-  }
-
-  // Auto-refresh every 60s (increased from 30s to avoid overwriting fresh DOM updates)
-  clearTimeout(_historyAutoRefreshTimer);
-  _historyAutoRefreshTimer = setTimeout(() => { if (isConnected) loadHistory(); }, 60000);
 }
 
 function showDeleteConfirmation(unitName, startDate, endDate, rowCount, revenue) {
@@ -2631,15 +2217,7 @@ async function performDelete() {
     showToast(`DELETE complete — ${totalRows.toLocaleString('en-IN')} rows removed`);
 
     // Block background auto-refresh to avoid race conditions during the reload window.
-    _historyBlockedUntil = Date.now() + 25000;
-    clearTimeout(_historyAutoRefreshTimer);
-
-    // Wait 3.5s before querying history — Supabase needs time to replicate the DELETE
-    // before daily_revenue row-count probes return accurate (zero) results.
-    // Querying immediately returns stale data, showing the old row count in history.
-    addLog('⏳ Waiting for DB replication before refreshing history...', 'info');
     await new Promise(r => setTimeout(r, 3500));
-    await loadHistory(true);
 
     // Notify parent dashboard
     if (window.parent !== window) {
@@ -2648,7 +2226,6 @@ async function performDelete() {
       }, 1000);
     }
 
-    // Extended to 6s so the post-delete loadHistory above has time to fully render.
     addLog('\uD83D\uDD04 Page will refresh in 6 seconds and mode will reset to APPEND...', 'info');
     setTimeout(() => {
       sessionStorage.setItem('ssrm_post_action_reload', '1');
@@ -3630,84 +3207,6 @@ async function handleFile(file){
   }
 }
 
-// ── Instantly update the history table row for a unit after an action ────────
-function updateHistoryRowInDOM(unitCode, action, startDate, endDate, rowCount, uploadedBy) {
-  const UNIT_NAMES = {
-    'BNPL_HYDERABAD': 'BNPL Hyderabad', 'BPC_BOLLARAM': 'BPC Bollaram',
-    'BPC_DR_BRAOU': 'BPC DR BRAOU', 'BPC_JEEDIMETLA': 'BPC Jeedimetla',
-    'HYDERABAD_DECCAN_RS_TMO': 'Hyderabad Deccan RS TMO', 'PBC_AUTONAGAR': 'PBC Autonagar',
-    'NSH_COUNTER': 'NSH Counter', 'SECUNDERABAD_RS_TMO': 'Secunderabad RS TMO',
-    'NAMPALLY_HYDERABAD_BPC_II': 'Nampally Hyderabad BPC II',
-    'BPC_DEVARAYAMJAL_I_II': 'BPC Devarayamjal I and II', 'BPC_POCHARAM': 'BPC Pocharam',
-    'PBC_AUTONAGAR_COUNTER': 'PBC Autonagar(Counter)'
-  };
-  // Master order index — same as MASTER_UNITS array in loadHistory
-  const MASTER_UNITS = [
-    'BNPL_HYDERABAD','BPC_BOLLARAM','BPC_DR_BRAOU','BPC_JEEDIMETLA',
-    'HYDERABAD_DECCAN_RS_TMO','PBC_AUTONAGAR','NSH_COUNTER',
-    'SECUNDERABAD_RS_TMO','NAMPALLY_HYDERABAD_BPC_II',
-    'BPC_DEVARAYAMJAL_I_II','BPC_POCHARAM','PBC_AUTONAGAR_COUNTER'
-  ];
-
-  const unitName = UNIT_NAMES[unitCode] || unitCode;
-  const rowIndex = MASTER_UNITS.indexOf(unitCode); // 0-based index in table
-
-  const now = new Date();
-  // Use explicit formatting (same style as formatDateTime) to avoid Chromium en-IN quirks
-  const dateStr = `${now.getDate().toString().padStart(2,'0')}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getFullYear()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-
-  const fmt2 = s => s ? s.split('-').reverse().join('-') : '—';
-  // For delete actions: the period shown should be the DELETED range (for audit clarity),
-  // but DATA STATUS must reflect whether surviving data exists — handled by loadHistory.
-  // For append/replace: show the uploaded range.
-  const period = (startDate && endDate) ? `${fmt2(startDate)} TO ${fmt2(endDate)}` : '—';
-  const rowsDisplay = rowCount != null ? parseInt(rowCount).toLocaleString('en-IN') : '—';
-
-  const modeClass   = getModeBadgeClass(action);
-  const modeDisplay = getModeDisplayName(action);
-  // DB STATUS for DOM patch: use DATA IN DB for all non-delete actions.
-  // Delete path no longer calls this function — it calls loadHistory(true) directly,
-  // which performs the actual daily_revenue probe for accurate status.
-  const dataStatusHtml = `<span style="color:var(--jade);font-family:var(--mono);font-size:10px;">✓ DATA IN DB</span>`;
-
-  const table = document.querySelector('#historyContainer .history-table tbody');
-  if (!table) { loadHistory(); return; } // table not rendered yet — force full reload
-
-  // Primary: match by row index (most reliable — order is fixed)
-  let targetRow = null;
-  if (rowIndex >= 0 && table.rows[rowIndex]) {
-    targetRow = table.rows[rowIndex];
-  }
-  // Fallback: match by unit name text (case-insensitive, partial)
-  if (!targetRow) {
-    const unitLower = unitName.toLowerCase();
-    for (const tr of table.querySelectorAll('tr')) {
-      const nameCell = tr.querySelector('.unit-name');
-      if (nameCell && nameCell.textContent.toLowerCase().includes(unitLower.slice(0, 15))) {
-        targetRow = tr;
-        break;
-      }
-    }
-  }
-
-  if (!targetRow) {
-    // Row not found at all — do a full reload
-    loadHistory(true);
-    return;
-  }
-
-  targetRow.cells[2].innerHTML = `<span class="mode-badge ${modeClass}">${modeDisplay}</span>`;
-  targetRow.cells[3].innerHTML = `<span style="font-family:var(--mono);font-size:10px;color:var(--text2);white-space:nowrap">${dateStr}</span>`;
-  targetRow.cells[4].innerHTML = `<span class="date-range">${period}</span>`;
-  targetRow.cells[5].innerHTML = `<span class="rows-count">${rowsDisplay}</span>`;
-  targetRow.cells[6].innerHTML = `<span class="uploader-name">${uploadedBy || 'System'}</span>`;
-  targetRow.cells[7].innerHTML = dataStatusHtml;
-  // Flash the row green/red to confirm the update visually
-  targetRow.style.transition = 'background 0.4s';
-  targetRow.style.background = (action === 'delete') ? 'rgba(224,84,84,0.12)' : 'rgba(31,212,160,0.12)';
-  setTimeout(() => { targetRow.style.background = ''; }, 2000);
-}
-
 async function batchInsert(table, rows) {
   const BATCH = 500;
   for (let i = 0; i < rows.length; i += BATCH) {
@@ -3864,8 +3363,8 @@ async function performUpload() {
 
     const runPayload = {
       unit_id, period_year, period_month,
-      period_start: cumulativeStart,
-      period_end:   cumulativeEnd,
+      period_start: startDate,
+      period_end:   endDate,
       uploaded_by: uploader,
       // row_count stores the CUMULATIVE total (all rows in DB for this unit/period).
       // session_rows stores only the rows added/affected by THIS upload session.
@@ -3878,7 +3377,6 @@ async function performUpload() {
 
     // ── Upsert upload_runs: try POST first; if a unique-constraint conflict blocks it
     //    (e.g. UNIQUE on unit_id+period_year+period_month), fall back to PATCHing
-    //    the existing record so loadHistory always sees an up-to-date entry.
     let runId = null;
     const runRes = await supaFetch('POST', 'upload_runs', runPayload);
 
@@ -3905,8 +3403,8 @@ async function performUpload() {
         await supaFetch('PATCH',
           `upload_runs?id=eq.${runId}`,
           {
-            period_start: cumulativeStart,
-            period_end:   cumulativeEnd,
+            period_start: startDate,
+            period_end:   endDate,
             uploaded_by:  uploader,
             row_count:    cumulativeRowCount,
             session_rows: aggregatedData.rowCount,
@@ -4069,7 +3567,7 @@ async function performUpload() {
             : cumulativeRowCount;
           await supaFetch('PATCH',
             `upload_runs?id=eq.${runId}`,
-            { period_start: cumulativeStart, period_end: cumulativeEnd, row_count: trueTotalRows, session_rows: aggregatedData.rowCount, uploaded_at: uploadTimestamp }
+            { period_start: startDate, period_end: endDate, row_count: trueTotalRows, session_rows: aggregatedData.rowCount, uploaded_at: uploadTimestamp }
           );
           cumulativeRowCount = trueTotalRows; // keep in sync for DOM patch below
         }
@@ -4097,28 +3595,14 @@ async function performUpload() {
       showToast(`APPEND complete — +${rowsAddedFromFile.toLocaleString('en-IN')} rows added`);
     }
 
-    // ── Instantly update history table in DOM ────────────────────────────────
-    const _unitCode   = unitCode;
-    const _uploadMode = uploadMode;
-    const _startDate  = cumulativeStart;   // final accurate cumulative range after all inserts
-    const _endDate    = cumulativeEnd;
-    // Show ONLY the rows added by this session (not cumulative total) for history accuracy
-    const _rowCount   = rowsAddedFromFile;
-    const _uploader   = uploader;
-
-    // DOM patch: instant visual update while the full DB reload runs in background
-    _historyBlockedUntil = Date.now() + 10000;
-    updateHistoryRowInDOM(_unitCode, _uploadMode, _startDate, _endDate, _rowCount, _uploader);
-    // Full reload from DB 600ms later — confirms the new upload_runs record is live
-    // and shows the true cumulative row count. Runs before the 3-second page reload.
-    setTimeout(() => { if (isConnected) loadHistory(true); }, 600);
+    // History section removed — upload complete
 
     uploadBtn.innerHTML = '<span>✓</span><span>DONE</span>';
 
     // Notify parent dashboard
     if (window.parent !== window) {
       setTimeout(() => {
-        window.parent.postMessage({ type: 'ssrm_upload_complete', action: _uploadMode }, '*');
+        window.parent.postMessage({ type: 'ssrm_upload_complete', action: uploadMode }, '*');
       }, 1000);
     }
 
