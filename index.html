@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SSRM Revenue Intelligence Dashboard — Live</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b0f1a">
+<meta name="description" content="SSRM Revenue Intelligence — Hyderabad Sorting Division Live Dashboard">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -199,6 +203,149 @@ body::before {
   gap: 6px;
 }
 .btn-upload-link:hover { background: rgba(45,184,245,0.15); border-color: var(--sky); }
+
+/* ── PWA INSTALL BADGE ─────────────────────────────────── */
+/* Sizes are +15% over the original baseline */
+#pwa-badge {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;                            /* 10 → 12 */
+  padding: 11px 20px 11px 14px;         /* 9/18/9/12 → 11/20/11/14 */
+  background: linear-gradient(135deg, var(--card) 0%, var(--card-hi) 100%);
+  border: 1px solid var(--border-hi);
+  border-radius: 100px;
+  box-shadow:
+    0 0 0 1px var(--gold-dim),
+    0 6px 28px rgba(0,0,0,0.6),
+    0 0 22px var(--gold-glow);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  animation: badgePop 0.7s cubic-bezier(0.34,1.56,0.64,1) both,
+             badgeGlow 3s ease-in-out 0.7s infinite;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#pwa-badge:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow:
+    0 0 0 1px rgba(240,165,0,0.25),
+    0 10px 36px rgba(0,0,0,0.65),
+    0 0 36px var(--gold-glow);
+}
+@keyframes badgePop {
+  from { transform: translateX(-50%) translateY(34px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+@keyframes badgeGlow {
+  0%,100% { box-shadow: 0 0 0 1px var(--gold-dim), 0 6px 28px rgba(0,0,0,0.6), 0 0 22px var(--gold-glow); }
+  50%     { box-shadow: 0 0 0 1px rgba(240,165,0,0.18), 0 6px 28px rgba(0,0,0,0.6), 0 0 36px var(--gold-glow); }
+}
+.pwa-badge-icon {
+  width: 37px; height: 37px;           /* 32 → 37 */
+  border-radius: 9px;                  /* 8 → 9 */
+  border: 1px solid rgba(240,165,0,0.35);
+  box-shadow: 0 0 10px var(--gold-dim);
+  flex-shrink: 0;
+  display: block;
+}
+.pwa-badge-body { display: flex; flex-direction: column; gap: 2px; }
+.pwa-badge-title {
+  font-family: var(--font-display);
+  font-size: 13px;                     /* 11 → 13 */
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: 0.03em;
+}
+.pwa-badge-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;                     /* 9 → 10 */
+  color: var(--gold);
+  letter-spacing: 0.07em;
+}
+.pwa-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, var(--gold) 0%, #ffd060 50%, var(--gold) 100%);
+  color: var(--void);
+  border: none;
+  border-radius: 100px;
+  padding: 7px 16px;                   /* 5/13 → 7/16 */
+  font-size: 12px;                     /* 10 → 12 */
+  font-weight: 800;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 12px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.25);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.pwa-badge-btn:hover { transform: scale(1.06); box-shadow: 0 0 20px rgba(240,165,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25); }
+.pwa-badge-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.45) 50%, transparent 65%);
+  background-size: 200% 100%;
+  background-position: -200% 0;
+  animation: badgeShimmer 2.8s ease-in-out infinite 1.2s;
+}
+@keyframes badgeShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+/* Dismiss button */
+.pwa-badge-dismiss {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;           /* scaled from concept */
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-3);
+  font-size: 11px;
+  cursor: pointer;
+  margin-left: 2px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.pwa-badge-dismiss:hover {
+  border-color: var(--coral);
+  color: var(--coral);
+  background: var(--coral-dim);
+}
+/* Installed state — swap gold for sky */
+#pwa-badge.installed { border-color: rgba(45,184,245,0.35); box-shadow: 0 0 0 1px var(--sky-dim), 0 6px 28px rgba(0,0,0,0.6), 0 0 22px var(--sky-dim); }
+#pwa-badge.installed .pwa-badge-btn { background: linear-gradient(135deg, var(--sky) 0%, #1a9fd4 100%); box-shadow: 0 0 12px var(--sky-dim); }
+#pwa-badge.installed .pwa-badge-sub { color: var(--sky); }
+/* Dismissed */
+#pwa-badge.dismissed { opacity: 0; transform: translateX(-50%) translateY(20px); pointer-events: none; transition: opacity 0.35s, transform 0.35s; }
+/* Toast */
+#pwa-toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: linear-gradient(135deg, var(--gold), #ffd060);
+  color: var(--void);
+  padding: 9px 22px;                   /* 8/20 → 9/22 */
+  border-radius: 100px;
+  font-size: 12px;                     /* 11 → 12 */
+  font-weight: 700;
+  font-family: var(--font-display);
+  white-space: nowrap;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: 0 6px 24px var(--gold-glow);
+  pointer-events: none;
+}
+#pwa-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* FY countdown */
 .fy-countdown { display: flex; gap: 6px; }
@@ -584,6 +731,20 @@ body::before {
     <button onclick="openuploader()" class="btn-upload-link">📤 Upload Data</button>
   </div>
 </header>
+
+<!-- ── PWA INSTALL BADGE (always visible) ── -->
+<div id="pwa-badge" onclick="pwaBadgeClick()" title="Install SSRM as an App">
+  <img class="pwa-badge-icon" src="./icon-192.png" alt="SSRM">
+  <div class="pwa-badge-body">
+    <span class="pwa-badge-title">Install SSRM App</span>
+    <span class="pwa-badge-sub" id="pwa-badge-sub">FOR ANDROID AND iOS</span>
+  </div>
+  <span class="pwa-badge-btn" id="pwa-badge-btn">⬇ Install</span>
+  <button class="pwa-badge-dismiss" id="pwa-badge-dismiss" onclick="pwaBadgeDismiss(event)" title="Dismiss">✕</button>
+</div>
+
+<!-- PWA Toast -->
+<div id="pwa-toast">✅ SSRM App Installed!</div>
 
 <div class="container" id="mainContainer">
 
@@ -1226,7 +1387,7 @@ async function loadData() {
       if (banner) {
         banner.style.display = 'flex';
         const span = banner.querySelector('.ovb-dates');
-        if (span && daily.length > 0) span.textContent = `Surviving dates: ${fmtDate(daily[0].date)} → ${fmtDate(daily[daily.length-1].date)}`;
+        if (span && dailyRaw.length > 0) span.textContent = `Surviving dates: ${fmtDate(dailyRaw[0].txn_date)} → ${fmtDate(dailyRaw[dailyRaw.length-1].txn_date)}`;
       }
     } else {
       const banner = document.getElementById('overview-partial-banner');
@@ -1761,19 +1922,72 @@ function switchTab(name) {
 }
 </script>
 <script>
-  // Check if service workers are supported by the user's browser
+  // ── Service Worker ──────────────────────────────────
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered successfully with scope:', registration.scope);
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-        });
+        .then(r => console.log('SW registered:', r.scope))
+        .catch(e => console.error('SW failed:', e));
     });
   }
-</body>
-</html>
+
+  // ── PWA Install Badge Logic ──────────────────────────
+  (function() {
+    const badge    = document.getElementById('pwa-badge');
+    const badgeBtn = document.getElementById('pwa-badge-btn');
+    const badgeSub = document.getElementById('pwa-badge-sub');
+    const toast    = document.getElementById('pwa-toast');
+    let deferredPrompt = null;
+
+    const isIOS        = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                      || window.navigator.standalone === true;
+
+    // Already running as installed PWA — hide badge
+    if (isStandalone) { badge.style.display = 'none'; return; }
+
+    // iOS — change button text to guide user
+    if (isIOS) {
+      badgeBtn.textContent = '📲 How to Install';
+      badgeSub.textContent = 'TAP FOR INSTRUCTIONS';
+    }
+
+    // Android/Desktop — capture install prompt
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    window.addEventListener('appinstalled', function() {
+      badge.classList.add('installed');
+      badgeBtn.textContent = '✅ Installed!';
+      badgeSub.textContent = 'OPEN FROM HOME SCREEN';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    });
+
+    window.pwaBadgeDismiss = function(e) {
+      e.stopPropagation();             // don't trigger install click
+      badge.classList.add('dismissed');
+      setTimeout(() => badge.style.display = 'none', 380);
+    };
+
+    window.pwaBadgeClick = function() {
+      if (deferredPrompt) {
+        // Android/Chrome — trigger native install
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(result) {
+          deferredPrompt = null;
+        });
+      } else if (isIOS) {
+        // iOS — show alert with instructions
+        alert('📱 Install on iPhone/iPad:\n\n1. Tap the Share button (□↑) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" — SSRM will appear on your home screen');
+      } else {
+        // Fallback for file:// or unsupported browsers — show instructions
+        alert('📲 Install SSRM Dashboard:\n\nIn Chrome: Click the ⋮ menu → "Install SSRM Dashboard"\nIn Edge: Click the ⋯ menu → "Apps" → "Install this site as an app"\n\nNote: The app must be hosted on a web server (https://) for automatic install prompts.');
+      }
+    };
+  })();
+</script>
 </body>
 </html>
