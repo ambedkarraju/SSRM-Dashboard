@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>SSRM — Unit Data Upload Terminal v16</title>
+<title>SSRM — Unit Data Upload Terminal v17</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b0f1a">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -2176,6 +2179,51 @@ async function performDelete() {
       }
     }
 
+    setProgress(75, 'Recalculating monthly summary totals');
+    // After any delete (partial or full), recalculate monthly_summary from
+    // remaining daily_revenue rows so Unit Rankings stay accurate.
+    for (const { y: fy, m: fm } of monthsToDelete) {
+      const mStart = `${fy}-${String(fm).padStart(2,'0')}-01`;
+      const mEnd   = `${fy}-${String(fm).padStart(2,'0')}-${String(new Date(fy, fm, 0).getDate()).padStart(2,'0')}`;
+
+      // Sum up whatever daily_revenue rows remain for this unit+month
+      const remainRes = await supaFetch('GET',
+        `daily_revenue?unit_id=eq.${unit_id}&txn_date=gte.${mStart}&txn_date=lte.${mEnd}&select=revenue,transactions`
+      );
+      const remainRows = (remainRes.ok && remainRes.data) ? remainRes.data : [];
+      const remRevenue = remainRows.reduce((s, r) => s + (+r.revenue || 0), 0);
+      const remTxns    = remainRows.reduce((s, r) => s + (+r.transactions || 0), 0);
+
+      if (remRevenue === 0 && remTxns === 0) {
+        // No data left for this month — delete the monthly_summary row entirely
+        await supaFetch('DELETE',
+          `monthly_summary?unit_id=eq.${unit_id}&period_year=eq.${fy}&period_month=eq.${fm}`
+        );
+        addLog(`   🗑️ Monthly summary removed (${fy}-${String(fm).padStart(2,'0')}) — no remaining data`, 'info');
+      } else {
+        // Partial data remains — upsert with recalculated totals
+        // Use fetch directly to set the resolution=merge-duplicates Prefer header
+        await fetch(`${SUPABASE_URL}/rest/v1/monthly_summary`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates,return=minimal'
+          },
+          body: JSON.stringify({
+            unit_id,
+            period_year: fy,
+            period_month: fm,
+            total_revenue: remRevenue,
+            total_transactions: remTxns,
+            updated_at: new Date().toISOString()
+          })
+        });
+        addLog(`   🔄 Monthly summary recalculated (${fy}-${String(fm).padStart(2,'0')}) — ₹${remRevenue.toLocaleString('en-IN')} remaining`, 'ok');
+      }
+    }
+
     setProgress(85, 'Logging DELETE action to history');
     // Only remove upload_run history entries whose date range is fully contained
     // within the delete range — never wipe runs that cover dates outside it.
@@ -2712,9 +2760,11 @@ async function handleFile(file){
           || (bulkCustIdIdx >= 0 && bulkCustIdRaw !== '' && bulkCustIdRaw !== '0')
           || paymentModeRaw.toLowerCase() === 'contract'
           || (contractIdIdx >= 0 && contractIdRaw !== '' && contractIdRaw !== '0');
-        const cv = custMap.get(custName) || { revenue: 0, transactions: 0, is_bulk: false };
+        const cv = custMap.get(custName) || { revenue: 0, transactions: 0, is_bulk: false, bulk_customer_id: '', contract_id: '' };
         cv.revenue += amt; cv.transactions++;
         if (isBulk) cv.is_bulk = true;
+        if (bulkCustIdRaw && bulkCustIdRaw !== '0') cv.bulk_customer_id = bulkCustIdRaw;
+        if (contractIdRaw && contractIdRaw !== '0') cv.contract_id = contractIdRaw;
         custMap.set(custName, cv);
       }
 
@@ -3037,10 +3087,12 @@ async function handleFile(file){
         const bulkByContract = contractIdIdx >= 0 && contractIdRaw !== '' && contractIdRaw !== '0';
         const isBulk = bulkByType || bulkByBulkId || bulkByPayment || bulkByContract;
 
-        const cv = custMap.get(custName) || { revenue: 0, transactions: 0, is_bulk: false };
+        const cv = custMap.get(custName) || { revenue: 0, transactions: 0, is_bulk: false, bulk_customer_id: '', contract_id: '' };
         cv.revenue += amt;
         cv.transactions++;
         if (isBulk) cv.is_bulk = true; // once bulk, always bulk (OR across all rows)
+        if (bulkCustIdRaw && bulkCustIdRaw !== '0') cv.bulk_customer_id = bulkCustIdRaw;
+        if (contractIdRaw && contractIdRaw !== '0') cv.contract_id = contractIdRaw;
         custMap.set(custName, cv);
       }
     }
@@ -3149,8 +3201,10 @@ async function handleFile(file){
             const pm3 = (paymentModeIdx >= 0 ? String(cells3[paymentModeIdx] || '') : '').trim();
             const ci3 = (contractIdIdx >= 0  ? String(cells3[contractIdIdx]  || '') : '').trim();
             const ib3 = ct3.toLowerCase().includes('bulk') || (bulkCustIdIdx >= 0 && bc3 !== '' && bc3 !== '0') || pm3.toLowerCase() === 'contract' || (contractIdIdx >= 0 && ci3 !== '' && ci3 !== '0');
-            const cv3 = custMap.get(cn3) || { revenue: 0, transactions: 0, is_bulk: false };
+            const cv3 = custMap.get(cn3) || { revenue: 0, transactions: 0, is_bulk: false, bulk_customer_id: '', contract_id: '' };
             cv3.revenue += amt3; cv3.transactions++; if (ib3) cv3.is_bulk = true;
+            if (bc3 && bc3 !== '0') cv3.bulk_customer_id = bc3;
+            if (ci3 && ci3 !== '0') cv3.contract_id = ci3;
             custMap.set(cn3, cv3);
           }
         }
@@ -3481,24 +3535,28 @@ async function performUpload() {
     const newCustMap = new Map(aggregatedData.custMap);   // clone — we will mutate
 
     if (uploadMode === 'append') {
-      // Fetch existing customer rows — do NOT select is_bulk (column may not exist)
+      // Fetch existing customer rows — include is_bulk, bulk_customer_id, contract_id so we preserve them during merge
       const existCust = await supaFetch('GET',
-        `top_customers?unit_id=eq.${unit_id}&period_year=eq.${period_year}&period_month=eq.${period_month}&select=customer_name,revenue,transactions`
+        `top_customers?unit_id=eq.${unit_id}&period_year=eq.${period_year}&period_month=eq.${period_month}&select=customer_name,revenue,transactions,is_bulk,bulk_customer_id,contract_id`
       );
       if (existCust.ok && existCust.data?.length) {
         for (const row of existCust.data) {
           if (newCustMap.has(row.customer_name)) {
             const cur = newCustMap.get(row.customer_name);
             newCustMap.set(row.customer_name, {
-              revenue:      (cur.revenue      || 0) + (row.revenue      || 0),
-              transactions: (cur.transactions || 0) + (row.transactions || 0),
-              is_bulk:      cur.is_bulk || false
+              revenue:          (cur.revenue      || 0) + (row.revenue      || 0),
+              transactions:     (cur.transactions || 0) + (row.transactions || 0),
+              is_bulk:          cur.is_bulk || !!row.is_bulk,
+              bulk_customer_id: cur.bulk_customer_id || row.bulk_customer_id || '',
+              contract_id:      cur.contract_id      || row.contract_id      || ''
             });
           } else {
             newCustMap.set(row.customer_name, {
-              revenue: row.revenue || 0,
-              transactions: row.transactions || 0,
-              is_bulk: false
+              revenue:          row.revenue || 0,
+              transactions:     row.transactions || 0,
+              is_bulk:          !!row.is_bulk,         // preserve stored bulk flag from DB
+              bulk_customer_id: row.bulk_customer_id || '',
+              contract_id:      row.contract_id      || ''
             });
           }
         }
@@ -3518,7 +3576,9 @@ async function performUpload() {
       customer_name,
       revenue: v.revenue,
       transactions: v.transactions,
-      is_bulk: v.is_bulk
+      is_bulk: v.is_bulk,
+      bulk_customer_id: v.bulk_customer_id || null,
+      contract_id:      v.contract_id      || null
     }));
     if (customerRows.length) {
       try {
@@ -4191,6 +4251,15 @@ async function dbInspectorDeleteUnit() {
   };
 }
 
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(r => console.log('SW registered:', r.scope))
+        .catch(e => console.warn('SW registration failed:', e));
+    });
+  }
 </script>
 </body>
 </html>
