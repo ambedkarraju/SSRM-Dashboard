@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>SSRM — Unit Data Upload Terminal v17</title>
+<title>SSRM — Unit Data Upload Terminal v20</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#0b0f1a">
 <link rel="apple-touch-icon" href="./icon-192.png">
@@ -612,6 +612,32 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 .alert-btn-secondary:hover {
   background: var(--wire);
 }
+
+/* ── DB Inspector sub-tabs ───────────────────────────────────────────────── */
+.dbi-tab-btn {
+  background: var(--raised);
+  color: var(--text2);
+  border: 1px solid var(--rim);
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+}
+.dbi-tab-btn:hover { color: var(--text); border-color: var(--wire); }
+.dbi-tab-btn.active { background: var(--copper); color: #000; border-color: var(--copper); }
+
+/* ── DB Inspector data tables ────────────────────────────────────────────── */
+.dbi-table { width:100%; border-collapse:collapse; font-size:12px; }
+.dbi-table th { padding:8px 12px; text-align:left; font-family:var(--mono); font-size:10px; color:var(--text2); font-weight:600; letter-spacing:0.06em; background:var(--raised); border-bottom:1px solid var(--rim); }
+.dbi-table td { padding:7px 12px; border-bottom:1px solid rgba(255,255,255,0.03); }
+.dbi-table tr:hover td { background:rgba(255,255,255,0.02); }
+.dbi-badge-ok  { display:inline-block; background:var(--jade-dim); color:var(--jade); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
+.dbi-badge-err { display:inline-block; background:var(--crimson-dim); color:var(--crimson); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
+.dbi-badge-warn { display:inline-block; background:rgba(245,185,74,0.12); color:var(--ember); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
 
 /* ── Auth modal ─────────────────────────────────────────────────────────── */
 .auth-card {
@@ -1337,6 +1363,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 .nav-chip.clickable:hover { color: var(--copper2); border-color: rgba(201,123,42,0.3); background: var(--glow-cu); }
 </style>
 </head>
+</head>
 <body>
 
 <div class="orb orb-a"></div>
@@ -1673,29 +1700,167 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
       <div class="panel-tag">Admin Only</div>
     </div>
     <div class="panel-body">
-      <!-- Lock notice — shown until admin unlocks -->
       <div class="um-lock-notice" id="dbLockNotice">
         🔐 &nbsp;Admin authentication required to access Database Inspector. Click <strong style="color:var(--crimson);margin:0 4px;">UNLOCK</strong> to proceed.
         <button class="um-btn um-btn-pwd" style="margin-left:auto;white-space:nowrap;" onclick="unlockDBInspector()">🔐 UNLOCK AS ADMIN</button>
       </div>
-
-      <!-- Main DB Inspector UI (hidden until admin unlocks) -->
       <div id="dbContent" style="display:none;">
-        <p style="color:var(--text2);font-size:13px;margin-bottom:16px;">Inspect what data is currently stored in Supabase — per unit, date range, and row counts. Connection must be active.</p>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
-          <button onclick="dbInspectorLoad()" style="background:var(--copper);color:#000;border:none;padding:9px 22px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.05em;">⟳ REFRESH</button>
-          <button onclick="dbInspectorDeleteUnit()" style="background:var(--crimson);color:#fff;border:none;padding:9px 22px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.05em;">🗑 DELETE UNIT DATA</button>
-          <span id="dbInspStatus" style="font-family:var(--mono);font-size:11px;color:var(--text2);">Click REFRESH to load...</span>
+        <!-- Sub-tab nav -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;border-bottom:1px solid var(--rim);padding-bottom:12px;">
+          <button class="dbi-tab-btn active" id="dbiTab-overview"   onclick="dbiSwitchTab('overview')">📊 Overview</button>
+          <button class="dbi-tab-btn"        id="dbiTab-health"     onclick="dbiSwitchTab('health')">🏥 Data Health</button>
+          <button class="dbi-tab-btn"        id="dbiTab-crossunit"  onclick="dbiSwitchTab('crossunit')">📋 Cross-Unit Summary</button>
+          <button class="dbi-tab-btn"        id="dbiTab-missing"    onclick="dbiSwitchTab('missing')">🔍 Missing Days</button>
+          <button class="dbi-tab-btn"        id="dbiTab-dupes"      onclick="dbiSwitchTab('dupes')">⚠️ Duplicates</button>
+          <button class="dbi-tab-btn"        id="dbiTab-activity"   onclick="dbiSwitchTab('activity')">👤 User Activity</button>
+          <button class="dbi-tab-btn"        id="dbiTab-repair"     onclick="dbiSwitchTab('repair')">🔧 Repair Tools</button>
+          <button class="dbi-tab-btn"        id="dbiTab-delete"     onclick="dbiSwitchTab('delete')" style="margin-left:auto;background:var(--crimson-dim);color:var(--crimson);border-color:var(--crimson);">🗑 Delete Data</button>
+          <button onclick="dbInspectorLoad()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⟳ REFRESH ALL</button>
         </div>
-        <div id="dbInspSummary" style="display:none;margin-bottom:20px;background:var(--raised);border:1px solid var(--rim);border-radius:6px;padding:14px;">
-          <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:8px;">DATABASE SUMMARY</div>
-          <div id="dbInspSummaryContent" style="display:flex;gap:24px;flex-wrap:wrap;"></div>
+        <div id="dbInspStatus" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:14px;">Click REFRESH ALL to load data...</div>
+
+        <!-- OVERVIEW -->
+        <div id="dbiPane-overview">
+          <div id="dbInspSummaryContent" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;"></div>
+          <div id="dbInspTable" style="overflow-x:auto;"></div>
         </div>
-        <div id="dbInspTable" style="overflow-x:auto;"></div>
-      </div>
+
+        <!-- DATA HEALTH -->
+        <div id="dbiPane-health" style="display:none;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:12px;">Green = data present, Red = missing. Analysis from Apr 2026 onwards.</div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text2);">Year:</label>
+            <select id="healthYear" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;">
+              <option value="2026">FY 2026-27</option><option value="2027">FY 2027-28</option>
+            </select>
+            <label style="font-size:12px;color:var(--text2);">Month:</label>
+            <select id="healthMonth" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;">
+              <option value="0">— All Months —</option>
+              <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+              <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+              <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            </select>
+            <button onclick="dbiLoadHealth()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Health Check</button>
+          </div>
+          <div id="healthGrid"></div>
+        </div>
+
+        <!-- CROSS-UNIT SUMMARY -->
+        <div id="dbiPane-crossunit" style="display:none;">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text2);">Year:</label>
+            <select id="crossYear" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;">
+              <option value="2026">FY 2026-27</option><option value="2027">FY 2027-28</option>
+            </select>
+            <label style="font-size:12px;color:var(--text2);">Month:</label>
+            <select id="crossMonth" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;">
+              <option value="0">— All Months —</option>
+              <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+              <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+              <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            </select>
+            <button onclick="dbiLoadCrossUnit()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Summary</button>
+            <button onclick="dbiExportCrossUnit()" style="background:var(--raised);color:var(--ember);border:1px solid var(--rim);padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⬇ Export CSV</button>
+          </div>
+          <div id="crossUnitTable" style="overflow-x:auto;"></div>
+        </div>
+
+        <!-- MISSING DAYS -->
+        <div id="dbiPane-missing" style="display:none;">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+            <label style="font-size:12px;color:var(--text2);">Year:</label>
+            <select id="missingYear" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;">
+              <option value="2026">FY 2026-27</option><option value="2027">FY 2027-28</option>
+            </select>
+            <label style="font-size:12px;color:var(--text2);">Month:</label>
+            <select id="missingMonth" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:6px 10px;border-radius:4px;font-family:var(--mono);font-size:12px;">
+              <option value="4">April</option><option value="5" selected>May</option><option value="6">June</option>
+              <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+              <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+              <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            </select>
+            <button onclick="dbiLoadMissingDays()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Detect Missing Days</button>
+          </div>
+          <div id="missingDaysTable" style="overflow-x:auto;"></div>
+        </div>
+
+        <!-- DUPLICATES -->
+        <div id="dbiPane-dupes" style="display:none;">
+          <button onclick="dbiLoadDuplicates()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;margin-bottom:14px;">Scan for Duplicates</button>
+          <div id="dupesTable" style="overflow-x:auto;"></div>
+        </div>
+
+        <!-- USER ACTIVITY -->
+        <div id="dbiPane-activity" style="display:none;">
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+            <button onclick="dbiLoadActivity()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Activity Log</button>
+            <button onclick="dbiExportActivity()" style="background:var(--raised);color:var(--ember);border:1px solid var(--rim);padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⬇ Export CSV</button>
+          </div>
+          <div id="activityTable" style="overflow-x:auto;"></div>
+        </div>
+
+        <!-- REPAIR TOOLS -->
+        <div id="dbiPane-repair" style="display:none;">
+          <div style="display:grid;gap:14px;">
+            <div style="background:var(--raised);border:1px solid var(--rim);border-radius:6px;padding:16px;">
+              <div style="font-family:var(--mono);font-size:12px;color:var(--ember);font-weight:700;margin-bottom:6px;">🔄 Recalculate Monthly Summary</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Fixes ghost rankings caused by deleted data.</div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                <select id="repairUnit" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:7px 10px;border-radius:4px;font-family:var(--mono);font-size:11px;min-width:200px;"></select>
+                <select id="repairYear" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:7px 10px;border-radius:4px;font-family:var(--mono);font-size:11px;">
+                  <option value="2026">FY 2026-27</option><option value="2027">FY 2027-28</option>
+                </select>
+                <select id="repairMonth" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:7px 10px;border-radius:4px;font-family:var(--mono);font-size:11px;">
+                  <option value="4">Apr</option><option value="5" selected>May</option><option value="6">Jun</option>
+                  <option value="7">Jul</option><option value="8">Aug</option><option value="9">Sep</option>
+                  <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+                  <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
+                </select>
+                <button onclick="dbiRepairMonthlySummary()" style="background:var(--jade);color:#000;border:none;padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Run Repair</button>
+                <button onclick="dbiRepairAllMonthly()" style="background:var(--raised);color:var(--jade);border:1px solid var(--jade);padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Repair ALL Units & Months</button>
+              </div>
+              <div id="repairSummaryLog" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
+            </div>
+            <div style="background:var(--raised);border:1px solid var(--rim);border-radius:6px;padding:16px;">
+              <div style="font-family:var(--mono);font-size:12px;color:var(--ember);font-weight:700;margin-bottom:6px;">🏷️ Fix Bulk Customer Flags</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Sets is_bulk = true for all customers with bulk_customer_id or contract_id — all units, all months.</div>
+              <button onclick="dbiRepairBulkFlags()" style="background:var(--jade);color:#000;border:none;padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Fix Bulk Flags — All Units All Months</button>
+              <div id="repairBulkLog" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DELETE DATA -->
+        <div id="dbiPane-delete" style="display:none;">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--crimson);margin-bottom:16px;">⚠️ Permanently deletes all data for selected unit and month. Irreversible.</div>
+          <div style="background:var(--raised);border:1px solid var(--crimson);border-radius:6px;padding:16px;max-width:480px;">
+            <div style="display:grid;gap:10px;margin-bottom:16px;">
+              <label style="font-size:11px;color:var(--text2);">Unit</label>
+              <select id="delUnit" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);"></select>
+              <label style="font-size:11px;color:var(--text2);">Year</label>
+              <input id="delYear" type="number" value="2026" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">
+              <label style="font-size:11px;color:var(--text2);">Month</label>
+              <select id="delMonth" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">
+                <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+                <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+                <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+              </select>
+              <label style="font-size:11px;color:var(--text2);">Type DELETE to confirm</label>
+              <input id="delConfirm" type="text" placeholder="DELETE" style="background:var(--ink);border:1px solid var(--crimson);color:var(--crimson);padding:8px;border-radius:4px;font-family:var(--mono);font-weight:700;">
+            </div>
+            <button onclick="dbInspectorDeleteUnit()" style="width:100%;background:var(--crimson);color:#fff;border:none;padding:10px;border-radius:4px;font-family:var(--mono);font-weight:700;cursor:pointer;">🗑 DELETE ALL DATA</button>
+            <div id="deleteUnitLog" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
+          </div>
+        </div>
+
+      </div><!-- end dbContent -->
     </div>
   </div>
 </div><!-- end tabDB shell -->
+
 
 <script>
 </script>
@@ -3143,15 +3308,45 @@ async function handleFile(file){
           throw new Error('No valid date values found in file — cannot auto-correct date range');
         }
 
-        // Snap to the full month of the first date found
-        const [fy, fm] = autoMin.split('-').map(Number);
-        const lastDay  = new Date(fy, fm, 0).getDate();
-        const fmStr    = String(fm).padStart(2, '0');
-        const corrFrom = `${fy}-${fmStr}-01`;
-        const corrTo   = `${fy}-${fmStr}-${String(lastDay).padStart(2, '0')}`;
+        // Snap the correction to the actual file date range (not full month)
+        const corrFrom = autoMin;
+        const corrTo   = autoMax;
+
+        // ── STOP and ask user to confirm before proceeding ──────────────────
+        addLog(`   ⚠️ File data (${autoMin} → ${autoMax}) does not match selected range (${filterFrom} → ${filterTo}).`, 'warn');
+        addLog(`   ⏸️ Upload paused — waiting for user confirmation...`, 'warn');
+
+        const userConfirmed = await new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'alert-overlay';
+          overlay.innerHTML = `
+            <div class="alert-card">
+              <div class="alert-title">⚠️ Date Range Mismatch</div>
+              <div class="alert-message">The file contains data for a <strong>different date range</strong> than what you selected.</div>
+              <div class="alert-details">
+                <div>📅 <strong>Selected range:</strong> ${filterFrom} → ${filterTo}</div>
+                <div>📂 <strong>File contains:</strong> ${autoMin} → ${autoMax}</div>
+                <div style="margin-top:10px;color:var(--copper1);">Do you want to proceed with the file's actual date range?</div>
+              </div>
+              <div class="alert-buttons">
+                <button class="alert-btn alert-btn-secondary" id="cancelAutoCorrect">✖ Cancel Upload</button>
+                <button class="alert-btn alert-btn-primary" id="confirmAutoCorrect">✔ Proceed with ${autoMin} → ${autoMax}</button>
+              </div>
+            </div>`;
+          document.body.appendChild(overlay);
+          overlay.querySelector('#confirmAutoCorrect').onclick = () => { overlay.remove(); resolve(true); };
+          overlay.querySelector('#cancelAutoCorrect').onclick  = () => { overlay.remove(); resolve(false); };
+        });
+
+        if (!userConfirmed) {
+          addLog(`   ❌ Upload cancelled by user — please correct the date range and try again.`, 'err');
+          throw new Error('Upload cancelled — date range mismatch rejected by user');
+        }
+
+        // User confirmed — apply the correction and proceed
         document.getElementById('fromDate').value = corrFrom;
         document.getElementById('toDate').value   = corrTo;
-        addLog(`   ✅ Date range auto-corrected to: ${corrFrom} → ${corrTo} (file data: ${autoMin} → ${autoMax})`, 'ok');
+        addLog(`   ✅ User confirmed. Date range updated to: ${corrFrom} → ${corrTo}`, 'ok');
         addLog(`   🔄 Re-parsing file with corrected date range...`, 'info');
 
         // Re-run the full row-level aggregation with the corrected filter
@@ -3279,6 +3474,13 @@ async function performUpload() {
   const startDate = document.getElementById('fromDate').value;
   const endDate = document.getElementById('toDate').value;
   const uploader = document.getElementById('uploaderName').value.trim() || 'System';
+
+  // Guard: data before April 2026 is not accepted
+  if (startDate < '2026-04-01' || endDate < '2026-04-01') {
+    addLog('❌ Upload blocked — data before April 2026 is not accepted. This system tracks data from April 2026 onwards.', 'err');
+    showToast('Date out of range — minimum is April 2026', true);
+    return;
+  }
 
   const uploadBtn = document.getElementById('uploadBtn');
   uploadBtn.disabled = true;
@@ -3854,18 +4056,27 @@ function resetForNewOperation() {
   }
 })();
 
-// ─── Auto-set date range to previous month on load ─────────────────────────
+// ─── Auto-set date range to FY start on load ────────────────────────────────
 (function setDefaultDates() {
   const now = new Date();
-  // Default to previous month (since uploads are typically for completed months)
-  let y = now.getFullYear();
-  let m = now.getMonth(); // 0-indexed: 0=Jan, so this is "previous month" if current month > 0
-  if (m === 0) { m = 12; y--; } // January → go back to December of previous year
-  const mm = String(m).padStart(2, '0');
-  const lastDay = new Date(y, m, 0).getDate(); // last day of that month
-  document.getElementById('fromDate').value = `${y}-${mm}-01`;
-  document.getElementById('toDate').value   = `${y}-${mm}-${String(lastDay).padStart(2,'0')}`;
-  console.log(`Default date range set to: ${y}-${mm}-01 → ${y}-${mm}-${lastDay}`);
+  const currentYear  = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-indexed
+
+  // FY starts April 1 — if current month is Jan-Mar, FY started previous year
+  const fyStartYear = currentMonth >= 4 ? currentYear : currentYear - 1;
+
+  // FROM = 01-Apr of current FY; TO = last day of previous complete month
+  let toY = currentYear, toM = currentMonth - 1;
+  if (toM === 0) { toM = 12; toY--; }
+  const lastDay = new Date(toY, toM, 0).getDate();
+  const toMM = String(toM).padStart(2,'0');
+
+  document.getElementById('fromDate').value = `${fyStartYear}-04-01`;
+  document.getElementById('toDate').value   = `${toY}-${toMM}-${String(lastDay).padStart(2,'0')}`;
+  // Enforce April 2026 as the earliest allowed date — no Feb/Mar 2026 data
+  document.getElementById('fromDate').min = '2026-04-01';
+  document.getElementById('toDate').min   = '2026-04-01';
+  console.log(`Default date range set to: ${fyStartYear}-04-01 → ${toY}-${toMM}-${lastDay}`);
 })();
 // ── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -3892,9 +4103,11 @@ function switchTab(tab) {
   } else if (tab === 'db') {
     tabDB.style.display = '';
     navDB.classList.add('active');
-    // Reset lock state each time user opens the tab
-    document.getElementById('dbLockNotice').style.display = 'flex';
-    document.getElementById('dbContent').style.display    = 'none';
+    // Only reset lock if not already unlocked by admin this session
+    if (!_dbUnlocked) {
+      document.getElementById('dbLockNotice').style.display = 'flex';
+      document.getElementById('dbContent').style.display    = 'none';
+    }
   }
 }
 
@@ -3903,21 +4116,8 @@ function switchTab(tab) {
 
 // ── User Management ──────────────────────────────────────────────────────────
 let _umUnlocked = false;
+let _dbUnlocked = false;
 
-async function unlockDBInspector() {
-  addLog('🔐 Admin authentication required to access DB Inspector...', 'info');
-  const auth = await showAuthModal('admin', 'level2');
-  if (!auth) { addLog('❌ DB Inspector: access cancelled.', 'err'); return; }
-  if (auth.role !== 'admin') {
-    addLog('❌ DB Inspector: admin role required. Access denied.', 'err');
-    showToast('Access Denied — Admin role required', true);
-    return;
-  }
-  addLog(`✅ DB Inspector unlocked by: ${auth.userName} (${auth.userId})`, 'ok');
-  document.getElementById('dbLockNotice').style.display = 'none';
-  document.getElementById('dbContent').style.display    = 'block';
-  if (isConnected) dbInspectorLoad();
-}
 
 async function unlockUserMgmt() {
   // Requires admin authentication (level 2 style — admin only)
@@ -3934,6 +4134,21 @@ async function unlockUserMgmt() {
   document.getElementById('umLockNotice').style.display = 'none';
   document.getElementById('umContent').style.display    = 'block';
   renderUserTable();
+}
+
+async function unlockDBInspector() {
+  // Requires admin authentication (level 2 style — admin only)
+  addLog('🔐 Admin authentication required to access Database Inspector...', 'info');
+  const auth = await showAuthModal('admin', 'level2');
+  if (!auth) { addLog('❌ Database Inspector: access cancelled.', 'err'); return; }
+  if (auth.role !== 'admin') {
+    addLog('❌ Database Inspector: admin role required. Access denied.', 'err');
+    showToast('Access Denied — Admin role required', true);
+    return;
+  }
+  addLog(`✅ Database Inspector unlocked by: ${auth.userName} (${auth.userId})`, 'ok');
+  document.getElementById('dbLockNotice').style.display = 'none';
+  document.getElementById('dbContent').style.display    = 'block';
 }
 
 function renderUserTable() {
@@ -4058,198 +4273,658 @@ function umChangePwd(userId) {
 
 // ── DB Inspector ─────────────────────────────────────────────────────────────
 
+// ═══════════════════════════════════════════════════════════════════
+//  DB INSPECTOR — Full Feature Set
+// ═══════════════════════════════════════════════════════════════════
+
+let _dbiAllUnits    = [];  // cached from business_units
+let _dbiRunsCache   = [];  // cached upload_runs
+let _dbiDailyCache  = [];  // cached daily_revenue summary
+let _dbiCrossCache  = [];  // cached monthly_summary
+let _dbiActivityCache = [];
+
+const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── Sub-tab switcher ─────────────────────────────────────────────────────────
+function dbiSwitchTab(tab) {
+  ['overview','health','crossunit','missing','dupes','activity','repair','delete'].forEach(t => {
+    document.getElementById(`dbiTab-${t}`).classList.toggle('active', t === tab);
+    document.getElementById(`dbiPane-${t}`).style.display = t === tab ? '' : 'none';
+  });
+}
+
+// ── Populate unit dropdowns in Repair and Delete panels ──────────────────────
+function dbiPopulateUnitSelects(units) {
+  const opts = units.map(u => `<option value="${u.id}">${u.code} — ${u.name}</option>`).join('');
+  ['repairUnit','delUnit'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
+
+// ── MAIN LOAD: fetches all base data ────────────────────────────────────────
 async function dbInspectorLoad() {
   const statusEl = document.getElementById('dbInspStatus');
-  const tableEl  = document.getElementById('dbInspTable');
-  const summaryEl = document.getElementById('dbInspSummary');
-  const summaryContent = document.getElementById('dbInspSummaryContent');
-
-  if (!isConnected) {
-    statusEl.textContent = '⚠ Not connected — configure Supabase first.';
-    return;
-  }
-
-  statusEl.textContent = '⏳ Querying database...';
-  tableEl.innerHTML = '';
-  summaryEl.style.display = 'none';
+  if (!isConnected) { statusEl.textContent = '⚠ Not connected.'; return; }
+  statusEl.textContent = '⏳ Loading database...';
 
   try {
-    // Fetch all upload_runs with full details
-    const runs = await supaFetch('GET',
-      'upload_runs?select=id,unit_id,period_year,period_month,period_start,period_end,row_count,status,uploaded_by,created_at&order=created_at.desc&limit=500'
-    );
+    // 1. Upload runs — fetch first so we can filter units by activity
+    const rRes = await supaFetch('GET',
+      'upload_runs?select=id,unit_id,period_year,period_month,period_start,period_end,row_count,status,uploaded_by,created_at&order=created_at.desc&limit=1000');
+    _dbiRunsCache = (rRes.ok && rRes.data) ? rRes.data : [];
 
-    if (!runs.ok || !runs.data) {
-      statusEl.textContent = '❌ Failed to fetch data: ' + (runs.error || 'Unknown error');
-      return;
-    }
+    // 2. Monthly summary
+    const mRes = await supaFetch('GET',
+      'monthly_summary?select=unit_id,period_year,period_month,total_revenue,total_transactions&order=period_year.desc,period_month.desc');
+    _dbiCrossCache = (mRes.ok && mRes.data) ? mRes.data : [];
 
-    const runsData = runs.data;
-    if (!runsData.length) {
-      statusEl.textContent = '📭 No upload records found in database.';
-      tableEl.innerHTML = '<div style="color:var(--text2);font-size:13px;padding:20px;text-align:center;">No data uploaded yet.</div>';
-      return;
-    }
+    // 3. Business units — hardcoded to exact 12 valid operational units only
+    const VALID_UNIT_CODES = new Set([
+      'BNPL_HYDERABAD', 'BPC_BOLLARAM', 'BPC_DR_BRAOU', 'BPC_JEEDIMETLA',
+      'HYDERABAD_DECCAN_RS_TMO', 'PBC_AUTONAGAR', 'NSH_COUNTER',
+      'SECUNDERABAD_RS_TMO', 'NAMPALLY_HYDERABAD_BPC_II',
+      'BPC_DEVARAYAMJAL_I_II', 'BPC_POCHARAM', 'PBC_AUTONAGAR_COUNTER'
+    ]);
+    const uRes = await supaFetch('GET', 'business_units?select=id,name,code&order=name');
+    const allUnits = (uRes.ok && uRes.data) ? uRes.data : [];
+    _dbiAllUnits = allUnits.filter(u => VALID_UNIT_CODES.has(u.code));
+    dbiPopulateUnitSelects(_dbiAllUnits);
 
-    // Fetch daily_revenue count per unit per month
-    const dailyCounts = await supaFetch('GET',
-      'daily_revenue?select=unit_id,txn_date&order=txn_date.asc'
-    );
+    // 4. Daily revenue — unit_id, txn_date, revenue for counting
+    const dRes = await supaFetch('GET',
+      'daily_revenue?select=unit_id,txn_date,revenue&order=txn_date.asc');
+    _dbiDailyCache = (dRes.ok && dRes.data) ? dRes.data : [];
 
-    // Build daily count map: unit_id -> { min_date, max_date, count }
-    const dailyMap = {};
-    if (dailyCounts.ok && dailyCounts.data) {
-      for (const row of dailyCounts.data) {
-        if (!dailyMap[row.unit_id]) dailyMap[row.unit_id] = { min: row.txn_date, max: row.txn_date, count: 0 };
-        const m = dailyMap[row.unit_id];
-        if (row.txn_date < m.min) m.min = row.txn_date;
-        if (row.txn_date > m.max) m.max = row.txn_date;
-        m.count++;
-      }
-    }
+    _dbiActivityCache = [..._dbiRunsCache];
 
-    // Summary stats
-    const totalRuns   = runsData.length;
-    const totalRows   = runsData.reduce((s, r) => s + (r.row_count || 0), 0);
-    const uniqueUnits = [...new Set(runsData.map(r => r.unit_id))].length;
-    const allDates    = runsData.flatMap(r => [r.period_start, r.period_end]).filter(Boolean).sort();
-    const earliest    = allDates[0] || '—';
-    const latest      = allDates[allDates.length - 1] || '—';
+    statusEl.textContent = `✅ Loaded — ${_dbiAllUnits.length} units · ${_dbiRunsCache.length} upload records · ${_dbiDailyCache.length} daily rows · refreshed ${new Date().toLocaleTimeString('en-IN')}`;
 
-    summaryContent.innerHTML = [
-      { label: 'Upload Records', val: totalRuns },
-      { label: 'Total Rows (cumulative)', val: totalRows.toLocaleString('en-IN') },
-      { label: 'Active Units', val: uniqueUnits },
-      { label: 'Data From', val: earliest },
-      { label: 'Data To', val: latest },
-    ].map(s => `
-      <div style="background:var(--ink);border:1px solid var(--rim);border-radius:4px;padding:10px 16px;min-width:140px;">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.08em;margin-bottom:4px;">${s.label}</div>
-        <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--copper2);">${s.val}</div>
-      </div>
-    `).join('');
-    summaryEl.style.display = 'block';
-
-    // Build table
-    const unitName = (uid) => {
-      const u = UNITS.find(u => u.id == uid);
-      return u ? `<span style="color:var(--ember)">${u.code}</span> <span style="color:var(--text2);font-size:10px;">${u.name}</span>` : `<span style="color:var(--text2)">#${uid}</span>`;
-    };
-
-    // Group by unit
-    const byUnit = {};
-    for (const r of runsData) {
-      if (!byUnit[r.unit_id]) byUnit[r.unit_id] = [];
-      byUnit[r.unit_id].push(r);
-    }
-
-    let html = `
-    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <thead>
-        <tr style="background:var(--raised);border-bottom:1px solid var(--rim);">
-          <th style="padding:8px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">UNIT</th>
-          <th style="padding:8px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">PERIOD</th>
-          <th style="padding:8px 12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">DATE RANGE</th>
-          <th style="padding:8px 12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">DAILY ROWS</th>
-          <th style="padding:8px 12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">MODE</th>
-          <th style="padding:8px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">UPLOADED BY</th>
-          <th style="padding:8px 12px;text-align:left;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">TIMESTAMP</th>
-          <th style="padding:8px 12px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--text2);font-weight:600;letter-spacing:0.06em;">DB STATUS</th>
-        </tr>
-      </thead>
-      <tbody>`;
-
-    for (const [uid, uRuns] of Object.entries(byUnit)) {
-      const dm = dailyMap[uid] || { min: '—', max: '—', count: 0 };
-      for (let i = 0; i < uRuns.length; i++) {
-        const r = uRuns[i];
-        const modeColor = r.status === 'replace' ? 'var(--crimson)' : 'var(--jade)';
-        const ts = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
-        const periodLabel = `${['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][r.period_month] || r.period_month} ${r.period_year}`;
-        const rowStyle = i === 0 ? 'border-top:1px solid var(--wire);' : '';
-
-        html += `
-        <tr style="${rowStyle}background:transparent;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-          <td style="padding:8px 12px;">${unitName(uid)}</td>
-          <td style="padding:8px 12px;font-family:var(--mono);color:var(--text);">${periodLabel}</td>
-          <td style="padding:8px 12px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--sky);">${r.period_start || '—'} → ${r.period_end || '—'}</td>
-          <td style="padding:8px 12px;text-align:center;font-family:var(--mono);font-weight:700;color:var(--ember);">${dm.count ? dm.count + '<span style=\'font-size:9px;color:var(--text2);\'> rows</span>' : '<span style=\'color:var(--text3)\'>0</span>'}</td>
-          <td style="padding:8px 12px;text-align:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${modeColor};background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:3px;">${(r.status||'').toUpperCase()}</span></td>
-          <td style="padding:8px 12px;color:var(--text2);font-size:11px;">${r.uploaded_by || '—'}</td>
-          <td style="padding:8px 12px;font-family:var(--mono);font-size:10px;color:var(--text2);">${ts}</td>
-          <td style="padding:8px 12px;text-align:center;">
-            ${dm.count > 0
-              ? '<span style=\'color:var(--jade);font-size:11px;\'>✓ Data present</span>'
-              : '<span style=\'color:var(--crimson);font-size:11px;\'>⚠ No rows</span>'}
-          </td>
-        </tr>`;
-      }
-    }
-
-    html += '</tbody></table>';
-    tableEl.innerHTML = html;
-    statusEl.textContent = `✅ Loaded ${runsData.length} records — ${Object.keys(byUnit).length} units — last refreshed ${new Date().toLocaleTimeString('en-IN')}`;
+    // Render whichever tab is active
+    dbiRenderOverview();
 
   } catch(e) {
     statusEl.textContent = '❌ Error: ' + e.message;
   }
 }
 
-async function dbInspectorDeleteUnit() {
-  if (!isConnected) { showToast('Not connected', true); return; }
+// ── OVERVIEW ─────────────────────────────────────────────────────────────────
+function dbiRenderOverview() {
+  const summaryEl = document.getElementById('dbInspSummaryContent');
+  const tableEl   = document.getElementById('dbInspTable');
 
-  // Build unit select
-  const unitOptions = UNITS.map(u => `<option value="${u.id}">${u.code} — ${u.name}</option>`).join('');
-  const monthOptions = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    .map((m,i) => `<option value="${i+1}">${m}</option>`).join('');
+  const totalRows   = _dbiRunsCache.reduce((s,r) => s+(r.row_count||0), 0);
+  const uniqueUnits = [...new Set(_dbiRunsCache.map(r=>r.unit_id))].length;
+  const allDates    = _dbiRunsCache.flatMap(r=>[r.period_start,r.period_end]).filter(Boolean).sort();
+  const totalRevenue = _dbiDailyCache.reduce((s,r) => s+(+r.revenue||0), 0);
 
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
-  overlay.innerHTML = `
-    <div style="background:var(--panel);border:1px solid var(--rim);border-radius:8px;padding:24px;min-width:360px;max-width:440px;">
-      <div style="font-family:var(--mono);font-size:13px;color:var(--crimson);font-weight:700;margin-bottom:16px;">⚠ DELETE UNIT DATA FROM DB</div>
-      <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">This permanently deletes daily_revenue, product_revenue, top_customers, and upload_runs for the selected unit and month.</div>
-      <div style="display:grid;gap:10px;margin-bottom:16px;">
-        <label style="font-size:11px;color:var(--text2);">Unit</label>
-        <select id="delUnit" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">${unitOptions}</select>
-        <label style="font-size:11px;color:var(--text2);">Year</label>
-        <input id="delYear" type="number" value="${new Date().getFullYear()}" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">
-        <label style="font-size:11px;color:var(--text2);">Month</label>
-        <select id="delMonth" style="background:var(--raised);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">${monthOptions}</select>
-        <label style="font-size:11px;color:var(--text2);">Type DELETE to confirm</label>
-        <input id="delConfirm" type="text" placeholder="DELETE" style="background:var(--raised);border:1px solid var(--crimson);color:var(--crimson);padding:8px;border-radius:4px;font-family:var(--mono);font-weight:700;">
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button id="delGo" style="flex:1;background:var(--crimson);color:#fff;border:none;padding:10px;border-radius:4px;font-family:var(--mono);font-weight:700;cursor:pointer;">🗑 DELETE</button>
-        <button onclick="this.closest('div[style]').remove()" style="flex:1;background:var(--raised);color:var(--text);border:1px solid var(--rim);padding:10px;border-radius:4px;font-family:var(--mono);cursor:pointer;">CANCEL</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
+  const stats = [
+    { label:'Upload Records',       val: _dbiRunsCache.length },
+    { label:'Total Raw Rows',       val: totalRows.toLocaleString('en-IN') },
+    { label:'Active Units',         val: uniqueUnits + ' / ' + _dbiAllUnits.length },
+    { label:'Total Revenue in DB',  val: '₹' + (totalRevenue/100000).toFixed(2) + ' L' },
+    { label:'Data From',            val: allDates[0] || '—' },
+    { label:'Data To',              val: allDates[allDates.length-1] || '—' },
+  ];
 
-  document.getElementById('delGo').onclick = async () => {
-    if (document.getElementById('delConfirm').value !== 'DELETE') {
-      showToast('Type DELETE to confirm', true); return;
-    }
-    const uid  = document.getElementById('delUnit').value;
-    const yr   = parseInt(document.getElementById('delYear').value);
-    const mo   = parseInt(document.getElementById('delMonth').value);
-    const mStart = `${yr}-${String(mo).padStart(2,'0')}-01`;
-    const mEnd   = mo === 12 ? `${yr+1}-01-01` : `${yr}-${String(mo+1).padStart(2,'0')}-01`;
-    const unitObj = UNITS.find(u => u.id == uid);
-    try {
-      await supaFetch('DELETE', `daily_revenue?unit_id=eq.${uid}&txn_date=gte.${mStart}&txn_date=lt.${mEnd}`);
-      await supaFetch('DELETE', `product_revenue?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
-      await supaFetch('DELETE', `top_customers?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
-      await supaFetch('DELETE', `upload_runs?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
-      overlay.remove();
-      showToast(`Deleted all data for ${unitObj?.code || uid} — ${['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][mo]} ${yr}`);
-      addLog(`🗑 DB Inspector: Deleted all data for unit ${unitObj?.code || uid}, ${mo}/${yr}`, 'warn');
-      dbInspectorLoad();
-    } catch(e) {
-      showToast('Delete failed: ' + e.message, true);
-    }
+  summaryEl.innerHTML = stats.map(s => `
+    <div style="background:var(--ink);border:1px solid var(--rim);border-radius:4px;padding:10px 16px;min-width:140px;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.08em;margin-bottom:4px;">${s.label}</div>
+      <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:var(--copper2);">${s.val}</div>
+    </div>`).join('');
+
+  // Build daily map: unit_id → { count, revenue } — Apr 2026+ only
+  const dailyMap = {};
+  for (const row of _dbiDailyCache) {
+    if (row.txn_date < '2026-04-01') continue;
+    if (!dailyMap[row.unit_id]) dailyMap[row.unit_id] = { count:0, revenue:0 };
+    dailyMap[row.unit_id].count++;
+    dailyMap[row.unit_id].revenue += (+row.revenue||0);
+  }
+
+  // Only show records for the 12 valid units, Apr-2026+ periods, sorted latest first
+  const validUnitIds = new Set(_dbiAllUnits.map(u => u.id));
+  const overviewRuns = _dbiRunsCache
+    .filter(r => {
+      if (!validUnitIds.has(r.unit_id)) return false;
+      if (r.period_year > 2026) return true;
+      if (r.period_year === 2026 && r.period_month >= 4) return true;
+      return false;
+    })
+    .sort((a,b) => (b.created_at||'').localeCompare(a.created_at||''));
+
+  const unitName = uid => {
+    const u = _dbiAllUnits.find(u => u.id == uid);
+    return u ? `<span style="color:var(--ember);font-family:var(--mono);font-size:11px;">${u.code}</span><br><span style="color:var(--text2);font-size:10px;">${u.name}</span>` : `#${uid}`;
   };
+
+  let html = `<div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:8px;padding:6px 0;">
+    Showing <strong style="color:var(--ember);">${overviewRuns.length}</strong> upload records · Apr 2026 onwards · <strong style="color:var(--jade);">${_dbiAllUnits.length}</strong> active units
+  </div>
+  <table class="dbi-table"><thead><tr>
+    <th>UNIT</th><th>PERIOD</th><th>DATE RANGE</th><th>DAILY ROWS</th>
+    <th>REVENUE</th><th>MODE</th><th>UPLOADED BY</th><th>TIMESTAMP</th><th>DB STATUS</th>
+  </tr></thead><tbody>`;
+
+  for (const r of overviewRuns) {
+    const uid = r.unit_id;
+    const dm = dailyMap[uid] || { count:0, revenue:0 };
+    const modeColor = r.status==='replace' ? 'var(--crimson)' : r.status==='delete' ? 'var(--ember)' : 'var(--jade)';
+    const ts = r.created_at ? new Date(r.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const pLabel = `${MONTHS[r.period_month]||r.period_month} ${r.period_year}`;
+    html += `<tr>
+      <td>${unitName(uid)}</td>
+      <td style="font-family:var(--mono);color:var(--text);">${pLabel}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--sky);">${r.period_start||'—'} → ${r.period_end||'—'}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:var(--ember);text-align:center;">${dm.count||'0'}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--jade);">₹${(dm.revenue/100000).toFixed(2)} L</td>
+      <td style="text-align:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${modeColor};background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:3px;">${(r.status||'').toUpperCase()}</span></td>
+      <td style="color:var(--text2);font-size:11px;">${r.uploaded_by||'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text2);">${ts}</td>
+      <td style="text-align:center;">${dm.count>0 ? '<span class="dbi-badge-ok">✓ Present</span>' : '<span class="dbi-badge-err">⚠ No Rows</span>'}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  tableEl.innerHTML = html;
 }
+
+// ── DATA HEALTH ──────────────────────────────────────────────────────────────
+// Returns true if a DB record (period_year, period_month) belongs to the selected FY.
+// FY yr means Apr(yr)–Mar(yr+1). Jan/Feb/Mar belong to year yr+1 in the DB.
+function inFY(fyBase, period_year, period_month) {
+  if (period_month >= 4) return period_year === fyBase;
+  return period_year === fyBase + 1;
+}
+// Given FY base year and month, returns the actual calendar year for that month.
+function calYear(fyBase, month) {
+  return month >= 4 ? fyBase : fyBase + 1;
+}
+// Sorts months in FY order: Apr(4)…Dec(12), Jan(1)…Mar(3)
+function sortFYMonths(months) {
+  return [...months].sort((a,b) => {
+    const fa = a >= 4 ? a - 4 : a + 8;
+    const fb = b >= 4 ? b - 4 : b + 8;
+    return fa - fb;
+  });
+}
+
+async function dbiLoadHealth() {
+  const fyBase = parseInt(document.getElementById('healthYear').value);
+  const moSel  = parseInt(document.getElementById('healthMonth').value);
+  const grid   = document.getElementById('healthGrid');
+  grid.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:11px;">Loading...</div>';
+
+  const validUnitIds = new Set(_dbiAllUnits.map(u => u.id));
+
+  // Filter monthly_summary: FY-aware, 12 valid units, optional month
+  const present = {};
+  for (const r of _dbiCrossCache) {
+    if (!inFY(fyBase, r.period_year, r.period_month)) continue;
+    if (!validUnitIds.has(r.unit_id)) continue;
+    if (moSel !== 0 && r.period_month !== moSel) continue;
+    present[`${r.unit_id}-${r.period_month}`] = r.total_revenue||0;
+  }
+
+  const activeMonths = moSel !== 0 ? [moSel] : sortFYMonths([...new Set(
+    _dbiCrossCache
+      .filter(r => inFY(fyBase, r.period_year, r.period_month) && validUnitIds.has(r.unit_id))
+      .map(r => r.period_month)
+  )]);
+
+  if (!activeMonths.length) {
+    grid.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:12px;padding:20px;">No data found for selected period.</div>';
+    return;
+  }
+
+  const moLabel = moSel !== 0
+    ? `${MONTHS[moSel]} ${calYear(fyBase, moSel)}`
+    : `FY ${fyBase}-${String(fyBase+1).slice(2)} (Apr ${fyBase} – Mar ${fyBase+1})`;
+  let html = `<div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:10px;">Period: <strong style="color:var(--ember);">${moLabel}</strong> · 12 units</div>
+  <div style="overflow-x:auto;"><table class="dbi-table"><thead><tr><th>UNIT</th>`;
+  activeMonths.forEach(m => { html += `<th style="text-align:center;">${MONTHS[m]}<br><span style="font-size:9px;color:var(--text3);">${calYear(fyBase,m)}</span></th>`; });
+  html += `<th style="text-align:center;">UPLOADED</th></tr></thead><tbody>`;
+
+  for (const u of _dbiAllUnits) {
+    let uploaded = 0;
+    html += `<tr><td><span style="color:var(--ember);font-family:var(--mono);font-size:11px;">${u.code}</span><br><span style="color:var(--text2);font-size:10px;">${u.name}</span></td>`;
+    activeMonths.forEach(m => {
+      const rev = present[`${u.id}-${m}`];
+      if (rev !== undefined) {
+        uploaded++;
+        html += `<td style="text-align:center;"><span class="dbi-badge-ok">✓ ₹${(rev/100000).toFixed(1)}L</span></td>`;
+      } else {
+        html += `<td style="text-align:center;"><span class="dbi-badge-err">✗ Missing</span></td>`;
+      }
+    });
+    const pct = Math.round(uploaded/activeMonths.length*100);
+    const pctColor = pct===100?'var(--jade)':pct>=50?'var(--ember)':'var(--crimson)';
+    html += `<td style="text-align:center;font-family:var(--mono);font-size:11px;color:${pctColor};font-weight:700;">${uploaded}/${activeMonths.length} (${pct}%)</td></tr>`;
+  }
+
+  // Summary row
+  html += `<tr style="border-top:2px solid var(--rim);"><td style="font-family:var(--mono);font-size:11px;color:var(--text2);font-weight:700;">UNITS WITH DATA</td>`;
+  activeMonths.forEach(m => {
+    const filled = _dbiAllUnits.filter(u => present[`${u.id}-${m}`] !== undefined).length;
+    const c = filled===12?'var(--jade)':filled>=6?'var(--ember)':'var(--crimson)';
+    html += `<td style="text-align:center;font-family:var(--mono);font-size:12px;font-weight:700;color:${c};">${filled}/12</td>`;
+  });
+  html += `<td></td></tr></tbody></table></div>`;
+  grid.innerHTML = html;
+}
+
+// ── CROSS-UNIT SUMMARY ───────────────────────────────────────────────────────
+async function dbiLoadCrossUnit() {
+  const fyBase = parseInt(document.getElementById('crossYear').value);
+  const moSel  = parseInt(document.getElementById('crossMonth').value);
+  const el     = document.getElementById('crossUnitTable');
+  el.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:11px;">Loading...</div>';
+
+  const validUnitIds = new Set(_dbiAllUnits.map(u => u.id));
+
+  // Filter: 12 valid units, FY-aware, optional month
+  const rows = _dbiCrossCache.filter(r => {
+    if (!validUnitIds.has(r.unit_id)) return false;
+    if (!inFY(fyBase, r.period_year, r.period_month)) return false;
+    if (moSel !== 0 && r.period_month !== moSel) return false;
+    return true;
+  });
+  if (!rows.length) { el.innerHTML='<div style="color:var(--text2);font-family:var(--mono);font-size:12px;padding:20px;">No data for selected period.</div>'; return; }
+
+  const months = moSel !== 0 ? [moSel] : sortFYMonths([...new Set(rows.map(r=>r.period_month))]);
+
+  // Map: unit_id → month → {revenue, txns}
+  const map = {};
+  for (const r of rows) {
+    if (!map[r.unit_id]) map[r.unit_id] = {};
+    map[r.unit_id][r.period_month] = { rev: r.total_revenue||0, txn: r.total_transactions||0 };
+  }
+
+  const moLabel = moSel !== 0
+    ? `${MONTHS[moSel]} ${calYear(fyBase, moSel)}`
+    : `FY ${fyBase}-${String(fyBase+1).slice(2)} (Apr ${fyBase} – Mar ${fyBase+1})`;
+  let html = `<div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:10px;">Period: <strong style="color:var(--ember);">${moLabel}</strong></div>
+  <div style="overflow-x:auto;"><table class="dbi-table"><thead><tr><th>UNIT</th>`;
+  months.forEach(m => html += `<th style="text-align:right;">${MONTHS[m]}<br><span style="font-size:9px;color:var(--text3);">${calYear(fyBase,m)}</span> Rev</th><th style="text-align:right;">${MONTHS[m]} Txns</th>`);
+  html += `<th style="text-align:right;">TOTAL REVENUE</th></tr></thead><tbody>`;
+
+  const grandTotals = {};
+  months.forEach(m => { grandTotals[m] = 0; });
+  let grandTotal = 0;
+
+  for (const u of _dbiAllUnits) {
+    const uData = map[u.id] || {};
+    let uTotal = 0;
+    html += `<tr><td><span style="color:var(--ember);font-family:var(--mono);font-size:11px;">${u.code}</span><br><span style="color:var(--text2);font-size:10px;">${u.name}</span></td>`;
+    months.forEach(m => {
+      const d = uData[m];
+      if (d) {
+        uTotal += d.rev;
+        grandTotals[m] = (grandTotals[m]||0) + d.rev;
+        html += `<td style="text-align:right;font-family:var(--mono);font-size:11px;color:var(--jade);">₹${(d.rev/100000).toFixed(2)}L</td>
+                 <td style="text-align:right;font-family:var(--mono);font-size:11px;color:var(--text2);">${d.txn.toLocaleString('en-IN')}</td>`;
+      } else {
+        html += `<td style="text-align:right;color:var(--text3);font-family:var(--mono);font-size:11px;">—</td><td style="text-align:right;color:var(--text3);font-family:var(--mono);font-size:11px;">—</td>`;
+      }
+    });
+    grandTotal += uTotal;
+    html += `<td style="text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--copper2);">₹${(uTotal/100000).toFixed(2)}L</td></tr>`;
+  }
+
+  // Grand total row
+  html += `<tr style="border-top:2px solid var(--rim);"><td style="font-family:var(--mono);font-size:11px;color:var(--text2);font-weight:700;">TOTAL</td>`;
+  months.forEach(m => {
+    const t = grandTotals[m]||0;
+    html += `<td style="text-align:right;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ember);">₹${(t/100000).toFixed(2)}L</td><td></td>`;
+  });
+  html += `<td style="text-align:right;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--copper2);">₹${(grandTotal/100000).toFixed(2)}L</td></tr>`;
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+// Export Cross-Unit as Excel
+function dbiExportCrossUnit() {
+  const fyBase = parseInt(document.getElementById('crossYear').value);
+  const moSel  = parseInt(document.getElementById('crossMonth').value);
+  const validUnitIds = new Set(_dbiAllUnits.map(u => u.id));
+  const rows = _dbiCrossCache.filter(r => {
+    if (!validUnitIds.has(r.unit_id)) return false;
+    if (!inFY(fyBase, r.period_year, r.period_month)) return false;
+    if (moSel !== 0 && r.period_month !== moSel) return false;
+    return true;
+  });
+  if (!rows.length) { showToast('No data to export', true); return; }
+  const months = sortFYMonths([...new Set(rows.map(r=>r.period_month))]);
+  const map = {};
+  for (const r of rows) {
+    if (!map[r.unit_id]) map[r.unit_id] = {};
+    map[r.unit_id][r.period_month] = { rev: r.total_revenue||0, txn: r.total_transactions||0 };
+  }
+  const headers = ['Unit Code','Unit Name', ...months.flatMap(m=>[`${MONTHS[m]}-${calYear(fyBase,m)} Revenue`,`${MONTHS[m]}-${calYear(fyBase,m)} Txns`]), 'Total Revenue'];
+  const csvRows = [headers.join(',')];
+  for (const u of _dbiAllUnits) {
+    const uData = map[u.id] || {};
+    let uTotal = 0;
+    const cols = [u.code, `"${u.name}"`];
+    months.forEach(m => {
+      const d = uData[m];
+      cols.push(d ? d.rev.toFixed(2) : '');
+      cols.push(d ? d.txn : '');
+      if (d) uTotal += d.rev;
+    });
+    cols.push(uTotal.toFixed(2));
+    csvRows.push(cols.join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], { type:'text/csv' });
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download = `SSRM_CrossUnit_FY${fyBase}-${String(fyBase+1).slice(2)}.csv`; a.click();
+  showToast('Cross-Unit summary exported');
+}
+
+// ── MISSING DAYS ─────────────────────────────────────────────────────────────
+async function dbiLoadMissingDays() {
+  const yr  = parseInt(document.getElementById('missingYear').value);
+  const mo  = parseInt(document.getElementById('missingMonth').value);
+  const el  = document.getElementById('missingDaysTable');
+  el.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:11px;">Scanning...</div>';
+
+  const mStart = `${yr}-${String(mo).padStart(2,'0')}-01`;
+  const lastDay = new Date(yr, mo, 0).getDate();
+  const mEnd   = `${yr}-${String(mo).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+
+  // All expected dates for the month
+  const allDates = [];
+  for (let d=1; d<=lastDay; d++) allDates.push(`${yr}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+
+  // Fetch daily_revenue for this month
+  const res = await supaFetch('GET',
+    `daily_revenue?select=unit_id,txn_date&txn_date=gte.${mStart}&txn_date=lte.${mEnd}`);
+  const rows = (res.ok && res.data) ? res.data : [];
+
+  // Build present dates per unit
+  const presentMap = {};
+  for (const r of rows) {
+    if (!presentMap[r.unit_id]) presentMap[r.unit_id] = new Set();
+    presentMap[r.unit_id].add(r.txn_date);
+  }
+
+  // Only show units that have at least 1 day uploaded
+  const uploadedUnits = Object.keys(presentMap).map(Number);
+  if (!uploadedUnits.length) {
+    el.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:12px;padding:20px;">No data uploaded for selected month.</div>';
+    return;
+  }
+
+  let html = `<table class="dbi-table"><thead><tr>
+    <th>UNIT</th><th style="text-align:center;">DAYS PRESENT</th><th style="text-align:center;">DAYS MISSING</th><th>MISSING DATES</th>
+  </tr></thead><tbody>`;
+
+  for (const u of _dbiAllUnits) {
+    if (!presentMap[u.id]) continue;
+    const present = presentMap[u.id];
+    const missing = allDates.filter(d => !present.has(d));
+    const missingStr = missing.length ? missing.map(d => d.slice(8)).join(', ') : '—';
+    const badgeClass = missing.length === 0 ? 'dbi-badge-ok' : missing.length <= 3 ? 'dbi-badge-warn' : 'dbi-badge-err';
+    html += `<tr>
+      <td><span style="color:var(--ember);font-family:var(--mono);font-size:11px;">${u.code}</span><br><span style="color:var(--text2);font-size:10px;">${u.name}</span></td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:700;color:var(--jade);">${present.size} / ${lastDay}</td>
+      <td style="text-align:center;"><span class="${badgeClass}">${missing.length}</span></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2);">${missingStr}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ── DUPLICATE DETECTOR ───────────────────────────────────────────────────────
+async function dbiLoadDuplicates() {
+  const el = document.getElementById('dupesTable');
+  el.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:11px;">Scanning...</div>';
+
+  // Group upload_runs by unit+year+month
+  const groups = {};
+  for (const r of _dbiRunsCache) {
+    if (r.status === 'delete') continue; // skip delete records
+    const key = `${r.unit_id}-${r.period_year}-${r.period_month}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
+
+  const dupes = Object.entries(groups).filter(([,runs]) => runs.length > 1);
+
+  if (!dupes.length) {
+    el.innerHTML = '<div style="color:var(--jade);font-family:var(--mono);font-size:12px;padding:20px;">✓ No duplicate uploads detected.</div>';
+    return;
+  }
+
+  let html = `<div style="color:var(--ember);font-family:var(--mono);font-size:11px;margin-bottom:10px;">⚠️ ${dupes.length} potential duplicate(s) found:</div>
+  <table class="dbi-table"><thead><tr>
+    <th>UNIT</th><th>PERIOD</th><th style="text-align:center;">UPLOAD COUNT</th><th>DATE RANGES UPLOADED</th><th>UPLOADED BY</th>
+  </tr></thead><tbody>`;
+
+  for (const [key, runs] of dupes) {
+    const uid = runs[0].unit_id;
+    const u = _dbiAllUnits.find(u => u.id == uid);
+    const uName = u ? `<span style="color:var(--ember);font-family:var(--mono);font-size:11px;">${u.code}</span>` : `#${uid}`;
+    const pLabel = `${MONTHS[runs[0].period_month]} ${runs[0].period_year}`;
+    const ranges = runs.map(r => `${r.period_start||'?'} → ${r.period_end||'?'} (${r.status||'?'})`).join('<br>');
+    const uploaders = [...new Set(runs.map(r=>r.uploaded_by||'?'))].join(', ');
+    html += `<tr>
+      <td>${uName}<br><span style="color:var(--text2);font-size:10px;">${u?.name||''}</span></td>
+      <td style="font-family:var(--mono);">${pLabel}</td>
+      <td style="text-align:center;"><span class="dbi-badge-warn">${runs.length} uploads</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--sky);">${ranges}</td>
+      <td style="color:var(--text2);font-size:11px;">${uploaders}</td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// ── USER ACTIVITY LOG ────────────────────────────────────────────────────────
+async function dbiLoadActivity() {
+  const el = document.getElementById('activityTable');
+  el.innerHTML = '<div style="color:var(--text2);font-family:var(--mono);font-size:11px;">Loading...</div>';
+
+  if (!_dbiActivityCache.length) { el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:20px;">No upload activity found.</div>'; return; }
+
+  // Summary by user
+  const byUser = {};
+  for (const r of _dbiActivityCache) {
+    const user = r.uploaded_by || 'Unknown';
+    if (!byUser[user]) byUser[user] = { uploads:0, rows:0, units:new Set() };
+    byUser[user].uploads++;
+    byUser[user].rows += r.row_count||0;
+    byUser[user].units.add(r.unit_id);
+  }
+
+  let html = `<div style="margin-bottom:16px;">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:8px;">ACTIVITY BY USER</div>
+    <table class="dbi-table"><thead><tr><th>USER</th><th style="text-align:center;">UPLOADS</th><th style="text-align:center;">TOTAL ROWS</th><th style="text-align:center;">UNITS COVERED</th></tr></thead><tbody>`;
+  for (const [user, s] of Object.entries(byUser)) {
+    html += `<tr>
+      <td style="font-family:var(--mono);color:var(--ember);">${user}</td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:700;color:var(--jade);">${s.uploads}</td>
+      <td style="text-align:center;font-family:var(--mono);color:var(--sky);">${s.rows.toLocaleString('en-IN')}</td>
+      <td style="text-align:center;font-family:var(--mono);color:var(--text2);">${s.units.size}</td>
+    </tr>`;
+  }
+  html += '</tbody></table></div>';
+
+  // Full log — Apr-2026+ only, 12 valid units only, latest first
+  const validUnitIds2 = new Set(_dbiAllUnits.map(u => u.id));
+  const filteredLog = _dbiActivityCache.filter(r => {
+    if (!validUnitIds2.has(r.unit_id)) return false;
+    if (r.period_year > 2026) return true;
+    if (r.period_year === 2026 && r.period_month >= 4) return true;
+    return false;
+  });
+
+  html += `<div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:8px;">UPLOAD LOG — APR 2026 ONWARDS · ${filteredLog.length} records · 12 units</div>
+  <table class="dbi-table"><thead><tr>
+    <th>TIMESTAMP</th><th>USER</th><th>UNIT</th><th>PERIOD</th><th>DATE RANGE</th><th style="text-align:center;">ROWS</th><th style="text-align:center;">MODE</th>
+  </tr></thead><tbody>`;
+
+  for (const r of filteredLog) {
+    const u = _dbiAllUnits.find(u => u.id==r.unit_id);
+    const ts = r.created_at ? new Date(r.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const modeColor = r.status==='replace' ? 'var(--crimson)' : r.status==='delete' ? 'var(--ember)' : 'var(--jade)';
+    html += `<tr>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text2);">${ts}</td>
+      <td style="font-family:var(--mono);color:var(--ember);">${r.uploaded_by||'—'}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${u?.code||'#'+r.unit_id}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${MONTHS[r.period_month]} ${r.period_year}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--sky);">${r.period_start||'—'} → ${r.period_end||'—'}</td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:700;color:var(--ember);">${(r.row_count||0).toLocaleString('en-IN')}</td>
+      <td style="text-align:center;"><span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${modeColor};background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:3px;">${(r.status||'').toUpperCase()}</span></td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+// Export Activity Log
+function dbiExportActivity() {
+  if (!_dbiActivityCache.length) { showToast('No data to export', true); return; }
+  const headers = ['Timestamp','User','Unit Code','Unit Name','Period','Date From','Date To','Rows','Mode'];
+  const csvRows = [headers.join(',')];
+  for (const r of _dbiActivityCache) {
+    const u = _dbiAllUnits.find(u => u.id==r.unit_id);
+    const ts = r.created_at ? new Date(r.created_at).toLocaleString('en-IN') : '';
+    csvRows.push([
+      `"${ts}"`, r.uploaded_by||'', u?.code||r.unit_id, `"${u?.name||''}"`,
+      `${MONTHS[r.period_month]} ${r.period_year}`, r.period_start||'', r.period_end||'',
+      r.row_count||0, r.status||''
+    ].join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`SSRM_ActivityLog_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+  showToast('Activity log exported');
+}
+
+// ── REPAIR TOOLS ─────────────────────────────────────────────────────────────
+async function dbiRepairMonthlySummary() {
+  const uid = document.getElementById('repairUnit').value;
+  const yr  = parseInt(document.getElementById('repairYear').value);
+  const mo  = parseInt(document.getElementById('repairMonth').value);
+  const log = document.getElementById('repairSummaryLog');
+  const u   = _dbiAllUnits.find(u => u.id==uid);
+
+  log.innerHTML = `⏳ Recalculating for ${u?.code||uid} — ${MONTHS[mo]} ${yr}...`;
+
+  try {
+    const mStart = `${yr}-${String(mo).padStart(2,'0')}-01`;
+    const mEnd   = `${yr}-${String(mo).padStart(2,'0')}-${String(new Date(yr,mo,0).getDate()).padStart(2,'0')}`;
+
+    const res = await supaFetch('GET',
+      `daily_revenue?unit_id=eq.${uid}&txn_date=gte.${mStart}&txn_date=lte.${mEnd}&select=revenue,transactions`);
+    const rows = (res.ok && res.data) ? res.data : [];
+    const totalRev  = rows.reduce((s,r) => s+(+r.revenue||0), 0);
+    const totalTxns = rows.reduce((s,r) => s+(+r.transactions||0), 0);
+
+    if (totalRev === 0 && totalTxns === 0) {
+      await supaFetch('DELETE', `monthly_summary?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
+      log.innerHTML = `<span style="color:var(--ember);">✓ No remaining data — monthly_summary row deleted for ${MONTHS[mo]} ${yr}</span>`;
+    } else {
+      await fetch(`${SUPABASE_URL}/rest/v1/monthly_summary`, {
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body: JSON.stringify({ unit_id:parseInt(uid), period_year:yr, period_month:mo, total_revenue:totalRev, total_transactions:totalTxns, updated_at:new Date().toISOString() })
+      });
+      log.innerHTML = `<span style="color:var(--jade);">✓ monthly_summary recalculated — ₹${(totalRev/100000).toFixed(2)}L, ${totalTxns.toLocaleString('en-IN')} txns</span>`;
+    }
+  } catch(e) { log.innerHTML = `<span style="color:var(--crimson);">❌ Error: ${e.message}</span>`; }
+}
+
+async function dbiRepairAllMonthly() {
+  const log = document.getElementById('repairSummaryLog');
+  log.innerHTML = '⏳ Repairing all units and months...';
+
+  try {
+    const allRows = _dbiDailyCache;
+    // Group by unit+month
+    const groups = {};
+    for (const r of allRows) {
+      const mo = r.txn_date ? parseInt(r.txn_date.slice(5,7)) : null;
+      const yr = r.txn_date ? parseInt(r.txn_date.slice(0,4)) : null;
+      if (!mo||!yr) continue;
+      const key = `${r.unit_id}-${yr}-${mo}`;
+      if (!groups[key]) groups[key] = { uid:r.unit_id, yr, mo, rev:0, txn:0 };
+      groups[key].rev  += (+r.revenue||0);
+      groups[key].txn  += (+r.transactions||0);
+    }
+
+    let repaired = 0;
+    for (const g of Object.values(groups)) {
+      await fetch(`${SUPABASE_URL}/rest/v1/monthly_summary`, {
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body: JSON.stringify({ unit_id:g.uid, period_year:g.yr, period_month:g.mo, total_revenue:g.rev, total_transactions:g.txn, updated_at:new Date().toISOString() })
+      });
+      repaired++;
+    }
+    log.innerHTML = `<span style="color:var(--jade);">✓ Repaired ${repaired} unit-month combinations across all units.</span>`;
+  } catch(e) { log.innerHTML = `<span style="color:var(--crimson);">❌ Error: ${e.message}</span>`; }
+}
+
+async function dbiRepairBulkFlags() {
+  const log = document.getElementById('repairBulkLog');
+  log.innerHTML = '⏳ Fixing bulk flags...';
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/top_customers?or=(bulk_customer_id.neq.,contract_id.neq.)&select=id`, {
+      method:'GET',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'}
+    });
+    // Use PATCH to update is_bulk=true for all rows with bulk signals
+    const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/top_customers?or=(bulk_customer_id.neq.,contract_id.neq.)`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ is_bulk: true })
+    });
+    if (patchRes.ok) {
+      log.innerHTML = `<span style="color:var(--jade);">✓ Bulk flags fixed for all customers with bulk_customer_id or contract_id — all units, all months.</span>`;
+    } else {
+      const errText = await patchRes.text();
+      log.innerHTML = `<span style="color:var(--crimson);">❌ Failed: ${errText}</span>`;
+    }
+  } catch(e) { log.innerHTML = `<span style="color:var(--crimson);">❌ Error: ${e.message}</span>`; }
+}
+
+// ── DELETE UNIT DATA (from Delete tab) ───────────────────────────────────────
+async function dbInspectorDeleteUnit() {
+  const delConfirmEl = document.getElementById('delConfirm');
+  if (!delConfirmEl || delConfirmEl.value !== 'DELETE') {
+    showToast('Type DELETE to confirm', true); return;
+  }
+  const uid  = document.getElementById('delUnit').value;
+  const yr   = parseInt(document.getElementById('delYear').value);
+  const mo   = parseInt(document.getElementById('delMonth').value);
+  const log  = document.getElementById('deleteUnitLog');
+  const mStart = `${yr}-${String(mo).padStart(2,'0')}-01`;
+  const mEnd_exclusive = mo===12 ? `${yr+1}-01-01` : `${yr}-${String(mo+1).padStart(2,'0')}-01`;
+  const u = _dbiAllUnits.find(u => u.id==uid);
+
+  log.innerHTML = `⏳ Deleting all data for ${u?.code||uid} — ${MONTHS[mo]} ${yr}...`;
+  try {
+    await supaFetch('DELETE', `daily_revenue?unit_id=eq.${uid}&txn_date=gte.${mStart}&txn_date=lt.${mEnd_exclusive}`);
+    await supaFetch('DELETE', `product_revenue?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
+    await supaFetch('DELETE', `top_customers?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
+    await supaFetch('DELETE', `monthly_summary?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
+    await supaFetch('DELETE', `upload_runs?unit_id=eq.${uid}&period_year=eq.${yr}&period_month=eq.${mo}`);
+    delConfirmEl.value = '';
+    log.innerHTML = `<span style="color:var(--jade);">✓ All data deleted for ${u?.code||uid} — ${MONTHS[mo]} ${yr}. monthly_summary also cleared.</span>`;
+    showToast(`Deleted: ${u?.code||uid} — ${MONTHS[mo]} ${yr}`);
+    await dbInspectorLoad();
+  } catch(e) {
+    log.innerHTML = `<span style="color:var(--crimson);">❌ Error: ${e.message}</span>`;
+  }
+}
+
 
 </script>
 <script>
