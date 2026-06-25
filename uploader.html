@@ -2786,6 +2786,7 @@ async function executeDeleteWithInlineAuth() {
   // Show Edit Keys only for admin
   const _ekb1 = document.getElementById('editKeysBtn');
   if (_ekb1) _ekb1.style.display = user.role === 'admin' ? 'flex' : 'none';
+  document.getElementById('inlineAuthPanel').classList.remove('visible');
   _inlineAuthAttempts = 0;
 
   await performDelete();
@@ -3928,6 +3929,8 @@ async function uploadToDatabase() {
   // Show Edit Keys only for admin
   const _ekb2 = document.getElementById('editKeysBtn');
   if (_ekb2) _ekb2.style.display = auth.role === 'admin' ? 'flex' : 'none';
+  // Check for duplicate/overlapping data before proceeding
+  const canProceed = await checkExistingData();
   if (canProceed) await performUpload();
 }
 
@@ -4048,7 +4051,16 @@ function resetForNewOperation() {
 window.onload = async function() {
   clearLog();
   addLog('🔌 Connecting to Supabase...', 'info');
-  const success = await testAndConnect(_HARD_URL, _HARD_KEY);
+  // Try localStorage saved credentials first, fall back to hard-coded keys
+  const savedUrl = localStorage.getItem('ssrm_url');
+  const savedKey = localStorage.getItem('ssrm_key');
+  const connectUrl = savedUrl || _HARD_URL;
+  const connectKey = savedKey || _HARD_KEY;
+  if (savedUrl && savedKey) {
+    document.getElementById('supaUrl').value = savedUrl;
+    document.getElementById('supaKey').value = savedKey;
+  }
+  const success = await testAndConnect(connectUrl, connectKey);
   if (success) {
     addLog('⚡ Auto-connected. System ready — select unit, date range, and load a file.', 'ok');
   } else {
@@ -4082,6 +4094,9 @@ window.onload = async function() {
   const lastDay = new Date(y, m, 0).getDate();
   document.getElementById('fromDate').value = `${y}-${mm}-01`;
   document.getElementById('toDate').value   = `${y}-${mm}-${String(lastDay).padStart(2,'0')}`;
+  // Enforce April 2026 as the earliest allowed date — no Feb/Mar 2026 data
+  document.getElementById('fromDate').min = '2026-04-01';
+  document.getElementById('toDate').min   = '2026-04-01';
   console.log(`Default date range set to: ${y}-${mm}-01 → ${y}-${mm}-${lastDay}`);
 })();
 // ── Tab switching ────────────────────────────────────────────────────────────
