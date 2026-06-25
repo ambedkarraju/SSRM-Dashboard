@@ -1424,11 +1424,11 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
         <div class="conn-grid">
           <div class="input-wrap">
             <span class="field-prefix">URL</span>
-            <input type="text" id="supaUrl" class="t-input" placeholder="https://xxxxx.supabase.co" value="">
+            <input type="text" id="supaUrl" class="t-input" placeholder="https://xxxxx.supabase.co" value="https://quuqbenotdbdtksjvojy.supabase.co">
           </div>
           <div class="input-wrap">
             <span class="field-prefix">KEY</span>
-            <input type="password" id="supaKey" class="t-input" placeholder="service_role key" value="">
+            <input type="password" id="supaKey" class="t-input" placeholder="service_role key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1dXFiZW5vdGRiZHRrc2p2b2p5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODc1MTEzOSwiZXhwIjoyMDk0MzI3MTM5fQ.IUU85jgJTZ2OV20jwAnVbJ8KS4bdYyNb8yXfriSmTgI">
           </div>
           <button class="btn-primary" id="connectBtn">
             <span>▶</span><span>CONNECT</span>
@@ -1453,7 +1453,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
             </div>
             <span style="font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:0.04em;" id="connUrlDisplay">read / write enabled</span>
           </div>
-          <button class="btn-ghost" id="editKeysBtn" style="border-color:rgba(224,84,84,0.4);color:var(--crimson);padding:7px 18px;font-size:11px;letter-spacing:0.08em;display:flex;align-items:center;gap:7px;">
+          <button class="btn-ghost" id="editKeysBtn" style="border-color:rgba(224,84,84,0.4);color:var(--crimson);padding:7px 18px;font-size:11px;letter-spacing:0.08em;display:none;align-items:center;gap:7px;">
             &#8599; EDIT KEYS
           </button>
         </div>
@@ -1866,7 +1866,9 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 </script>
 
 <script>
-let SUPABASE_URL="", SUPABASE_KEY="", aggregatedData=null, isConnected=false;
+const _HARD_URL = "https://quuqbenotdbdtksjvojy.supabase.co";
+const _HARD_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF1dXFiZW5vdGRiZHRrc2p2b2p5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODc1MTEzOSwiZXhwIjoyMDk0MzI3MTM5fQ.IUU85jgJTZ2OV20jwAnVbJ8KS4bdYyNb8yXfriSmTgI";
+let SUPABASE_URL=_HARD_URL, SUPABASE_KEY=_HARD_KEY, aggregatedData=null, isConnected=false;
 let uploadMode = "append";
 let _inlineAuthAttempts = 0;
 
@@ -1874,15 +1876,32 @@ let _inlineAuthAttempts = 0;
 let currentSession = null; // { userId, userName, role }
 
 // ── Credential store ─────────────────────────────────────────────────────────
-// Format: { userId: { name, hash (sha256 of password), role: 'admin'|'user' } }
-// Passwords are SHA-256 hashed. Role controls what operations are permitted.
-// Generate hash: https://emn178.github.io/online-tools/sha256.html
-let AUTH_USERS = {
-  'admin':    { name: 'Administrator',   hash: '20862e1e0c7681518a309c1747c0415315cbeca72197733bb07071b17a05f72c', role: 'admin' }, // admin
-  'ssrm01':  { name: 'SSRM Operator 1', hash: 'b94f6f125c79e3a5ffaa826f584c10d52ada669e6762051b826b55776d05a3d5', role: 'user'  }, // ssrm01
-  'ssrm02':  { name: 'SSRM Operator 2', hash: '9ec4c12949a4f31474f299058ce2af3b8f6e6f7c1d2e4e1c7cdee0d5c5d8b2a1', role: 'user'  }, // ssrm02
-  'manager': { name: 'Manager',          hash: '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', role: 'user'  }, // password
+// Loaded from Supabase table `auth_users` on connect.
+// All changes via User Management UI are saved to Supabase immediately.
+let AUTH_USERS = {};
+const AUTH_USERS_FALLBACK = {
+  'admin': { name: 'Administrator', hash: '20862e1e0c7681518a309c1747c0415315cbeca72197733bb07071b17a05f72c', role: 'admin' }
 };
+
+async function loadAuthUsers() {
+  try {
+    const res = await supaFetch('GET', 'auth_users?select=user_id,name,hash,role&order=user_id');
+    if (res.ok && Array.isArray(res.data) && res.data.length > 0) {
+      AUTH_USERS = {};
+      res.data.forEach(r => {
+        AUTH_USERS[r.user_id] = { name: r.name, hash: r.hash, role: r.role };
+      });
+      addLog(`👥 Auth users loaded from Supabase (${res.data.length} users).`, 'info');
+    } else {
+      AUTH_USERS = { ...AUTH_USERS_FALLBACK };
+      addLog('⚠️ auth_users table empty or not found — using fallback credentials.', 'warn');
+    }
+  } catch(e) {
+    AUTH_USERS = { ...AUTH_USERS_FALLBACK };
+    addLog('⚠️ Could not load auth users from Supabase — using fallback credentials.', 'warn');
+    console.warn('loadAuthUsers error:', e);
+  }
+}
 
 // Sha-256 helper (Web Crypto API — no external lib needed)
 async function sha256(message) {
@@ -2167,7 +2186,8 @@ async function testAndConnect(url,key){
       localStorage.setItem('ssrm_url',SUPABASE_URL); 
       localStorage.setItem('ssrm_key',SUPABASE_KEY); 
       
-      addLog('✅ Supabase connection established — read/write access confirmed.','ok'); 
+      addLog('✅ Supabase connection established — read/write access confirmed.','ok');
+      await loadAuthUsers();
       
       document.getElementById('topConnState').classList.add('live'); 
       document.getElementById('topConnText').textContent='CONNECTED';
@@ -2763,7 +2783,9 @@ async function executeDeleteWithInlineAuth() {
   addLog(`✅ Identity verified: ${user.name} (${userId}) — Admin confirmed. Initiating DELETE...`, 'ok');
   currentSession = { userId, userName: user.name, role: user.role };
   document.getElementById('uploaderName').value = user.name;
-  document.getElementById('inlineAuthPanel').classList.remove('visible');
+  // Show Edit Keys only for admin
+  const _ekb1 = document.getElementById('editKeysBtn');
+  if (_ekb1) _ekb1.style.display = user.role === 'admin' ? 'flex' : 'none';
   _inlineAuthAttempts = 0;
 
   await performDelete();
@@ -3903,7 +3925,9 @@ async function uploadToDatabase() {
   addLog(`✅ Authenticated: ${auth.userName} (${auth.userId}) | Role: ${auth.role.toUpperCase()} | ${uploadMode.toUpperCase()} authorised.`, 'ok');
   currentSession = auth;
   document.getElementById('uploaderName').value = auth.userName;
-  const canProceed = await checkExistingData();
+  // Show Edit Keys only for admin
+  const _ekb2 = document.getElementById('editKeysBtn');
+  if (_ekb2) _ekb2.style.display = auth.role === 'admin' ? 'flex' : 'none';
   if (canProceed) await performUpload();
 }
 
@@ -3995,6 +4019,9 @@ function resetForNewOperation() {
   // previous non-admin APPEND/REPLACE — without this, clicking DELETE after a
   // non-admin upload was silently blocked until a full browser refresh.
   currentSession = null;
+  // Hide Edit Keys button on session clear
+  const _ekb3 = document.getElementById('editKeysBtn');
+  if (_ekb3) _ekb3.style.display = 'none';
   document.getElementById('statsPanel').style.display = 'none';
   document.getElementById('progressArea').style.display = 'none';
   document.getElementById('dropzoneEl').style.display = 'block';
@@ -4018,26 +4045,16 @@ function resetForNewOperation() {
   addLog('🔄 Ready for new operation — select unit, set date range, and load a file.', 'info');
 }
 
-(async () => {
+window.onload = async function() {
   clearLog();
-  const savedUrl = localStorage.getItem('ssrm_url');
-  const savedKey = localStorage.getItem('ssrm_key');
-  
-  if (savedUrl && savedKey) {
-    // Auto-connect silently using saved credentials
-    document.getElementById('supaUrl').value = savedUrl;
-    document.getElementById('supaKey').value = savedKey;
-    addLog('💾 Saved credentials found — attempting auto-connect...', 'info');
-    const success = await testAndConnect(savedUrl, savedKey);
-    if (success) {
-      addLog('⚡ Auto-connected using saved credentials. System ready — select unit, date range, and load a file.', 'ok');
-    } else {
-      addLog('⚠️ Auto-connect failed. Please verify URL and Key and click CONNECT.', 'warn');
-    }
+  addLog('🔌 Connecting to Supabase...', 'info');
+  const success = await testAndConnect(_HARD_URL, _HARD_KEY);
+  if (success) {
+    addLog('⚡ Auto-connected. System ready — select unit, date range, and load a file.', 'ok');
   } else {
-    addLog('✅ Ready — enter Supabase URL and Service Role Key, then click CONNECT.', 'ok');
+    addLog('⚠️ Auto-connect failed. Click CONNECT button manually.', 'warn');
   }
-  
+
   // Wire editKeysBtn
   const editBtn = document.getElementById('editKeysBtn');
   if (editBtn) {
@@ -4054,29 +4071,18 @@ function resetForNewOperation() {
       addLog('🔑 Edit Keys — update credentials and click CONNECT.', 'info');
     };
   }
-})();
+};
 
-// ─── Auto-set date range to FY start on load ────────────────────────────────
+// ─── Auto-set date range to current month on load ────────────────────────────
 (function setDefaultDates() {
   const now = new Date();
-  const currentYear  = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // 1-indexed
-
-  // FY starts April 1 — if current month is Jan-Mar, FY started previous year
-  const fyStartYear = currentMonth >= 4 ? currentYear : currentYear - 1;
-
-  // FROM = 01-Apr of current FY; TO = last day of previous complete month
-  let toY = currentYear, toM = currentMonth - 1;
-  if (toM === 0) { toM = 12; toY--; }
-  const lastDay = new Date(toY, toM, 0).getDate();
-  const toMM = String(toM).padStart(2,'0');
-
-  document.getElementById('fromDate').value = `${fyStartYear}-04-01`;
-  document.getElementById('toDate').value   = `${toY}-${toMM}-${String(lastDay).padStart(2,'0')}`;
-  // Enforce April 2026 as the earliest allowed date — no Feb/Mar 2026 data
-  document.getElementById('fromDate').min = '2026-04-01';
-  document.getElementById('toDate').min   = '2026-04-01';
-  console.log(`Default date range set to: ${fyStartYear}-04-01 → ${toY}-${toMM}-${lastDay}`);
+  const y  = now.getFullYear();
+  const m  = now.getMonth() + 1; // 1-indexed: current month
+  const mm = String(m).padStart(2, '0');
+  const lastDay = new Date(y, m, 0).getDate();
+  document.getElementById('fromDate').value = `${y}-${mm}-01`;
+  document.getElementById('toDate').value   = `${y}-${mm}-${String(lastDay).padStart(2,'0')}`;
+  console.log(`Default date range set to: ${y}-${mm}-01 → ${y}-${mm}-${lastDay}`);
 })();
 // ── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -4191,8 +4197,16 @@ async function umAddUser() {
 
   const hash = await sha256(pwd);
   AUTH_USERS[newId] = { name: newName, hash, role };
-  addLog(`✅ User Management: Added user "${newId}" (${newName}) with role: ${role.toUpperCase()}`, 'ok');
-  showToast(`User "${newId}" added successfully`);
+  addLog(`✅ User Management: Added user "${newId}" (${newName}) [role: ${role.toUpperCase()}] — saved to Supabase.`, 'ok');
+
+  // Save to Supabase
+  const saveRes = await supaFetch('POST', 'auth_users', { user_id: newId, name: newName, hash, role });
+  if (saveRes.ok) {
+    showToast(`User "${newId}" added & saved`);
+  } else {
+    addLog(`⚠️ User "${newId}" added locally but Supabase save failed (${saveRes.status}).`, 'warn');
+    showToast(`User "${newId}" added (Supabase sync failed)`, true);
+  }
 
   // Clear form
   document.getElementById('umNewId').value   = '';
@@ -4205,14 +4219,22 @@ async function umAddUser() {
   renderUserTable();
 }
 
-function umDeleteUser(userId) {
+async function umDeleteUser(userId) {
   if (userId === 'admin') { showToast('Cannot delete the primary admin account', true); return; }
   if (!AUTH_USERS[userId]) return;
   const u = AUTH_USERS[userId];
   if (!confirm(`Delete user "${userId}" (${u.name})?\n\nThis cannot be undone.`)) return;
   delete AUTH_USERS[userId];
-  addLog(`🗑️ User Management: Deleted user "${userId}" (${u.name})`, 'warn');
-  showToast(`User "${userId}" deleted`);
+
+  // Delete from Supabase
+  const delRes = await supaFetch('DELETE', `auth_users?user_id=eq.${encodeURIComponent(userId)}`);
+  if (delRes.ok) {
+    addLog(`🗑️ User Management: Deleted user "${userId}" (${u.name}) — removed from Supabase.`, 'warn');
+    showToast(`User "${userId}" deleted`);
+  } else {
+    addLog(`⚠️ User "${userId}" deleted locally but Supabase delete failed (${delRes.status}).`, 'warn');
+    showToast(`User "${userId}" deleted (Supabase sync failed)`, true);
+  }
   renderUserTable();
 }
 
@@ -4262,9 +4284,17 @@ function umChangePwd(userId) {
     if (p1.length < 6) { errEl.textContent='⚠ Password must be at least 6 characters.'; errEl.style.display='block'; return; }
     if (p1 !== p2)     { errEl.textContent='⚠ Passwords do not match.'; errEl.style.display='block'; return; }
     AUTH_USERS[userId].hash = await sha256(p1);
+
+    // Save to Supabase
+    const saveRes = await supaFetch('PATCH', `auth_users?user_id=eq.${encodeURIComponent(userId)}`, { hash: AUTH_USERS[userId].hash });
     overlay.remove();
-    addLog(`🔑 User Management: Password changed for "${userId}" (${u.name})`, 'ok');
-    showToast(`Password updated for "${userId}"`);
+    if (saveRes.ok) {
+      addLog(`🔑 User Management: Password changed for "${userId}" (${u.name}) — saved to Supabase. Effective on all devices immediately.`, 'ok');
+      showToast(`Password updated for "${userId}" ✓`);
+    } else {
+      addLog(`⚠️ Password changed locally for "${userId}" but Supabase save failed (${saveRes.status}). Will revert on next reload.`, 'warn');
+      showToast(`Password changed (Supabase sync failed)`, true);
+    }
   };
   overlay.addEventListener('keydown', e => { if(e.key==='Escape') overlay.remove(); });
   setTimeout(() => overlay.querySelector('#cpNewPwd').focus(), 80);
