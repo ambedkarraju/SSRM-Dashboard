@@ -765,6 +765,7 @@ body::before {
     <div class="filter-group">
       <div class="filter-label">Month</div>
       <select class="filter-select" id="fil-month" onchange="applyFilters()" style="min-width:110px;">
+        <option value="ALL">📊 All Months (FY Cumulative)</option>
         <option value="4">April</option><option value="5">May</option><option value="6">June</option>
         <option value="7">July</option><option value="8">August</option><option value="9">September</option>
         <option value="10">October</option><option value="11">November</option><option value="12">December</option>
@@ -797,21 +798,21 @@ body::before {
     <div class="kpi-grid">
       <div class="kpi-card gold">
         <span class="kpi-icon">₹</span>
-        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-label" id="kpi-rev-label">Total Revenue</div>
         <div class="kpi-value" id="kpi-rev">—</div>
         <div class="kpi-sub">Base Amount (total − tax) &nbsp;|&nbsp; <span id="kpi-base">—</span></div>
       </div>
       <div class="kpi-card blue">
         <span class="kpi-icon">📦</span>
-        <div class="kpi-label">Total Transactions</div>
+        <div class="kpi-label" id="kpi-txn-label">Total Transactions</div>
         <div class="kpi-value" id="kpi-txn">—</div>
         <div class="kpi-sub">Articles dispatched</div>
       </div>
       <div class="kpi-card green">
         <span class="kpi-icon">📈</span>
-        <div class="kpi-label">Monthly Target %</div>
+        <div class="kpi-label" id="kpi-pct-label">Monthly Target %</div>
         <div class="kpi-value" id="kpi-pct">—</div>
-        <div class="kpi-sub">vs monthly target of <span id="kpi-monthly-target">—</span></div>
+        <div class="kpi-sub" id="kpi-pct-sub">vs monthly target of <span id="kpi-monthly-target">—</span></div>
       </div>
       <div class="kpi-card red">
         <span class="kpi-icon">⏳</span>
@@ -1307,17 +1308,45 @@ async function autoDetectLatestPeriod() {
 function applyFilters() { loadData(); }
 
 function getFilters() {
+  const monthRaw = document.getElementById('fil-month').value;
   return {
     unitCode: document.getElementById('fil-unit').value,
     year: parseInt(document.getElementById('fil-year').value),
-    month: parseInt(document.getElementById('fil-month').value)
+    month: monthRaw === 'ALL' ? 'ALL' : parseInt(monthRaw)
   };
+}
+
+// ─── FY / CUMULATIVE HELPERS ─────────────────────────────────
+// When month === 'ALL', the selected "year" is treated as the fiscal year
+// start year, i.e. April <year> → March <year+1> (matches FY 2026-27 style
+// labelling used across this dashboard).
+function fyLabel(year) { return `FY ${year}-${String(year+1).slice(-2)}`; }
+
+function periodLabel(d) {
+  if (!d || !d.year) return '—';
+  if (d.month === 'ALL') return `All Months — ${fyLabel(d.year)}`;
+  return `${MONTHS[d.month]} ${d.year}`;
+}
+
+function getPeriodRange(year, month) {
+  if (month === 'ALL') {
+    const fyStartYear = year;
+    const fyEndYear = year + 1;
+    return {
+      startDate: `${fyStartYear}-04-01`,
+      endDate: `${fyEndYear}-04-01`,
+      periodParams: `or=(and(period_year.eq.${fyStartYear},period_month.gte.4),and(period_year.eq.${fyEndYear},period_month.lte.3))`
+    };
+  }
+  const startDate = `${year}-${String(month).padStart(2,'0')}-01`;
+  const endDate = (month === 12) ? `${year+1}-01-01` : `${year}-${String(month+1).padStart(2,'0')}-01`;
+  return { startDate, endDate, periodParams: `period_year=eq.${year}&period_month=eq.${month}` };
 }
 
 // ─── LOAD DATA ─────────────────────────────────────────────
 async function loadData() {
   const { unitCode, year, month } = getFilters();
-  const monthName = MONTHS[month] + ' ' + year;
+  const monthName = periodLabel({ year, month });
   const selectedUnit = UNITS.find(u => u.code === unitCode);
   document.getElementById('hdr-period').textContent = monthName + (unitCode === 'ALL' ? ' — All Units' : ' — ' + (selectedUnit?.name || unitCode));
 
@@ -1333,17 +1362,16 @@ async function loadData() {
     if (unitIds.length === 0) { DATA = null; renderAll({}); showNoDataMessage(); return; }
 
     const unitFilter = `unit_id=in.(${unitIds.join(',')})`;
-    const startDate = `${year}-${String(month).padStart(2,'0')}-01`;
-    let endDate = (month === 12) ? `${year+1}-01-01` : `${year}-${String(month+1).padStart(2,'0')}-01`;
+    let { startDate, endDate, periodParams } = getPeriodRange(year, month);
 
-    const [dailyRaw, productsRaw, sourcesRaw, customersRaw] = await Promise.all([
+    async function fetchPeriodData() { return Promise.all([
       supa(`daily_revenue?${unitFilter}&txn_date=gte.${startDate}&txn_date=lt.${endDate}&select=txn_date,revenue,transactions&order=txn_date`).catch(() => []),
-      supa(`product_revenue?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=product_name,revenue,transactions&order=revenue.desc`).catch(() => []),
+      supa(`product_revenue?${unitFilter}&${periodParams}&select=product_name,revenue,transactions&order=revenue.desc`).catch(() => []),
       Promise.resolve([]),
       (async () => {
         // Step 1: try with is_bulk column
         try {
-          const rows = await supa(`top_customers?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=customer_name,revenue,transactions,is_bulk&order=revenue.desc&limit=50`);
+          const rows = await supa(`top_customers?${unitFilter}&${periodParams}&select=customer_name,revenue,transactions,is_bulk&order=revenue.desc&limit=50`);
           if (rows && rows.length > 0) return rows;
           console.warn('[SSRM] top_customers returned 0 rows (with is_bulk). Trying without is_bulk...');
         } catch(e) {
@@ -1351,7 +1379,7 @@ async function loadData() {
         }
         // Step 2: retry without is_bulk (column may not exist in DB yet)
         try {
-          const rows2 = await supa(`top_customers?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=customer_name,revenue,transactions&order=revenue.desc&limit=50`);
+          const rows2 = await supa(`top_customers?${unitFilter}&${periodParams}&select=customer_name,revenue,transactions&order=revenue.desc&limit=50`);
           if (rows2 && rows2.length > 0) return rows2.map(r => ({ ...r, is_bulk: !!r.is_bulk }));
           console.warn('[SSRM] top_customers returned 0 rows (without is_bulk). Trying product fallback...');
         } catch(e2) {
@@ -1359,7 +1387,7 @@ async function loadData() {
         }
         // Step 3: fallback to product_revenue as proxy
         try {
-          const prodFallback = await supa(`product_revenue?${unitFilter}&period_year=eq.${year}&period_month=eq.${month}&select=product_name,revenue,transactions&order=revenue.desc&limit=50`);
+          const prodFallback = await supa(`product_revenue?${unitFilter}&${periodParams}&select=product_name,revenue,transactions&order=revenue.desc&limit=50`);
           if (prodFallback && prodFallback.length > 0) {
             console.warn('[SSRM] Using product_revenue as customer proxy (fallback).');
             return prodFallback.map(p => ({ customer_name: p.product_name || 'Counter Customer', revenue: p.revenue, transactions: p.transactions, is_bulk: false, _isFallback: true }));
@@ -1370,7 +1398,27 @@ async function loadData() {
         console.warn('[SSRM] All customer fetch attempts failed — returning empty.');
         return [];
       })()
-    ]);
+    ]); }
+
+    let [dailyRaw, productsRaw, sourcesRaw, customersRaw] = await fetchPeriodData();
+
+    // If "All Months" was selected but the chosen Year actually corresponds to the
+    // Jan-Mar tail of the fiscal year (e.g. auto-detect left Year on 2027 for FY 2026-27),
+    // retry once against the FY that starts one year earlier.
+    if (month === 'ALL' && dailyRaw.length === 0 && productsRaw.length === 0) {
+      const altRange = getPeriodRange(year - 1, 'ALL');
+      try {
+        const altCheck = await supa(`daily_revenue?${unitFilter}&txn_date=gte.${altRange.startDate}&txn_date=lt.${altRange.endDate}&select=txn_date&limit=1`);
+        if (altCheck && altCheck.length > 0) {
+          ({ startDate, endDate, periodParams } = altRange);
+          [dailyRaw, productsRaw, sourcesRaw, customersRaw] = await fetchPeriodData();
+          const ys = document.getElementById('fil-year');
+          if (ys) ys.value = year - 1;
+        }
+      } catch(eAlt) { console.warn('[SSRM] FY auto-correction check failed:', eAlt.message); }
+    }
+
+    const effectiveYear = (month === 'ALL' && document.getElementById('fil-year')) ? parseInt(document.getElementById('fil-year').value) : year;
 
     if (dailyRaw.length === 0 && productsRaw.length === 0) {
       DATA = null; renderAll({}); showNoDataMessage();
@@ -1401,6 +1449,33 @@ async function loadData() {
       dailyMap[d.txn_date].transactions += +d.transactions;
     });
     const daily = Object.entries(dailyMap).sort().map(([date, v]) => ({ date, ...v }));
+
+    // ── FY-to-date cumulative (always Apr 1 of the FY → end of selected period) ──
+    // Used for anything measuring progress toward the ANNUAL target (Target Gap,
+    // FY Revenue Remaining, Annual Target Progress, Target Tracker tab) so that
+    // checking, say, June reflects Apr+May+June combined — not just June alone.
+    const ytdFyStartYear = (month === 'ALL') ? effectiveYear : (month >= 4 ? year : year - 1);
+    let ytdDaily;
+    if (month === 'ALL') {
+      ytdDaily = daily; // the period fetch already spans the full FY
+    } else {
+      try {
+        const ytdStart = `${ytdFyStartYear}-04-01`;
+        const ytdRaw = await supa(`daily_revenue?${unitFilter}&txn_date=gte.${ytdStart}&txn_date=lt.${endDate}&select=txn_date,revenue,transactions&order=txn_date`);
+        const ytdMap = {};
+        (ytdRaw || []).forEach(r => {
+          if (!ytdMap[r.txn_date]) ytdMap[r.txn_date] = { revenue: 0, transactions: 0 };
+          ytdMap[r.txn_date].revenue += +r.revenue;
+          ytdMap[r.txn_date].transactions += +r.transactions;
+        });
+        ytdDaily = Object.entries(ytdMap).sort().map(([date, v]) => ({ date, ...v }));
+      } catch (eYtd) {
+        console.warn('[SSRM] YTD cumulative fetch failed, falling back to period-only revenue:', eYtd.message);
+        ytdDaily = daily;
+      }
+    }
+    const ytdRevenue = ytdDaily.reduce((s, r) => s + r.revenue, 0);
+    const ytdTransactions = ytdDaily.reduce((s, r) => s + r.transactions, 0);
 
     const prodMap = {};
     productsRaw.forEach(p => {
@@ -1447,7 +1522,7 @@ async function loadData() {
     try {
       let summaries;
       try {
-        summaries = await supa(`monthly_summary?period_year=eq.${year}&period_month=eq.${month}&select=unit_id,total_revenue,total_transactions`);
+        summaries = await supa(`monthly_summary?${periodParams}&select=unit_id,total_revenue,total_transactions`);
       } catch(viewErr) {
         const allDaily = await supa(`daily_revenue?txn_date=gte.${startDate}&txn_date=lt.${endDate}&select=unit_id,revenue,transactions`);
         const aggMap = {};
@@ -1472,7 +1547,8 @@ async function loadData() {
         });
     } catch(e) { console.warn('Could not fetch unit summaries', e); }
 
-    DATA = { daily, products, sources, customers, totalRevenue, totalTransactions, annualTargetCr, unitSummary, year, month };
+    DATA = { daily, products, sources, customers, totalRevenue, totalTransactions, annualTargetCr, unitSummary, year: effectiveYear, month, ytdDaily, ytdRevenue, ytdTransactions, ytdFyStartYear };
+    document.getElementById('hdr-period').textContent = periodLabel({ year: effectiveYear, month }) + (unitCode === 'ALL' ? ' — All Units' : ' — ' + (selectedUnit?.name || unitCode));
     document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-IN');
     renderAll(DATA);
   } catch(e) {
@@ -1530,24 +1606,29 @@ function renderAll(d) {
 }
 
 function renderKPIs(d) {
-  const rev = d.totalRevenue;
+  const rev = d.totalRevenue;                                  // period-specific (selected month, or FY total if "All Months")
+  const ytdRev = (typeof d.ytdRevenue === 'number') ? d.ytdRevenue : rev;  // always cumulative FY-to-date
   const txn = d.totalTransactions;
   const target = d.annualTargetCr * 1e7;
-  const monthlyTarget = target / 12;
-  const pct = monthlyTarget > 0 ? (rev / monthlyTarget * 100).toFixed(1) : '—';
-  const annualPct = target > 0 ? (rev / target * 100).toFixed(2) : '0';
-  const remaining = target - rev;
+  const isAll = d.month === 'ALL';
+  const periodTarget = isAll ? target : (target / 12);
+  const pct = periodTarget > 0 ? (rev / periodTarget * 100).toFixed(1) : '—';
+  const annualPct = target > 0 ? (ytdRev / target * 100).toFixed(2) : '0';
+  const remaining = target - ytdRev;
 
+  document.getElementById('kpi-rev-label').textContent = isAll ? 'Total Revenue (Cumulative)' : 'Total Revenue';
   document.getElementById('kpi-rev').textContent = fmt(rev);
   document.getElementById('kpi-base').textContent = 'Excl. GST: ' + fmt(rev);
+  document.getElementById('kpi-txn-label').textContent = isAll ? 'Total Transactions (Cumulative)' : 'Total Transactions';
   document.getElementById('kpi-txn').textContent = fmtNum(txn);
+  document.getElementById('kpi-pct-label').textContent = isAll ? 'Annual Target %' : 'Monthly Target %';
   document.getElementById('kpi-pct').textContent = pct + '%';
-  document.getElementById('kpi-monthly-target').textContent = fmtCr(monthlyTarget);
+  document.getElementById('kpi-pct-sub').innerHTML = (isAll ? 'vs annual target of ' : 'vs monthly target of ') + '<span id="kpi-monthly-target">' + fmtCr(periodTarget) + '</span>';
   document.getElementById('kpi-remain').textContent = fmtCr(remaining);
   document.getElementById('annual-pct').textContent = annualPct + '%';
-  document.getElementById('rev-achieved-label').textContent = 'Achieved: ' + fmtCr(rev);
+  document.getElementById('rev-achieved-label').textContent = 'Achieved: ' + fmtCr(ytdRev) + (isAll ? '' : ' (FY-to-date)');
   document.getElementById('target-label').textContent = 'Target: ₹' + d.annualTargetCr.toFixed(2) + ' Cr';
-  document.getElementById('target-unit-label').textContent = `${MONTHS[d.month]} ${d.year} | Target: ₹${d.annualTargetCr.toFixed(2)} Crore`;
+  document.getElementById('target-unit-label').textContent = `${periodLabel(d)} | FY-to-date achieved | Target: ₹${d.annualTargetCr.toFixed(2)} Crore`;
   setTimeout(() => { document.getElementById('annual-bar').style.width = Math.min(annualPct, 100) + '%'; }, 300);
 }
 
@@ -1644,25 +1725,41 @@ function renderDailyCharts(d) {
       { type: 'bar', label: 'Revenue (₹)', data: revs, backgroundColor: 'rgba(245,158,11,0.6)', borderColor: '#f59e0b', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
       { type: 'line', label: 'Transactions', data: txns, borderColor: '#38bdf8', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2, yAxisID: 'y2' }
     ]},
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.datasetIndex===0?fmt(ctx.raw):fmtNum(ctx.raw)+' txns' } } }, scales: { y: { ticks: { callback: v=>fmt(v,0) } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v=>fmtNum(v), font: { size: 9 } } } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.datasetIndex===0?fmt(ctx.raw):fmtNum(ctx.raw)+' txns' } } }, scales: { x: { ticks: { maxTicksLimit: d.month === 'ALL' ? 14 : 12, font: { size: 9 } } }, y: { ticks: { callback: v=>fmt(v,0) } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v=>fmtNum(v), font: { size: 9 } } } } }
   });
 
   makeChart('chart-daily-txn', {
     type: 'line',
     data: { labels: dates, datasets: [{ label: 'Transactions', data: txns, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => fmtNum(v) } } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: d.month === 'ALL' ? 14 : 12, font: { size: 9 } } }, y: { ticks: { callback: v => fmtNum(v) } } } }
   });
 
   let cum = 0;
   const cumRevs = revs.map(r => { cum += r; return cum; });
-  const monthlyTarget = d.annualTargetCr * 1e7 / 12;
+  const annualTargetAbs = d.annualTargetCr * 1e7;
+  const monthlyTarget = annualTargetAbs / 12;
+  const isAll = d.month === 'ALL';
+  const targetPace = (() => {
+    if (isAll) {
+      // Pace the full annual target evenly across every day of the fiscal year.
+      const fyStart = new Date(d.year, 3, 1);         // April 1
+      const fyEndDate = new Date(d.year + 1, 2, 31);  // March 31
+      const totalDaysInFY = Math.round((fyEndDate - fyStart) / 86400000) + 1;
+      return d.daily.map(row => {
+        const dayOfFY = Math.round((parseLocalDate(row.date) - fyStart) / 86400000) + 1;
+        return annualTargetAbs / totalDaysInFY * dayOfFY;
+      });
+    }
+    const daysInMonth = new Date(d.year, d.month, 0).getDate();
+    return d.daily.map(row => { const dayNum = parseLocalDate(row.date).getDate(); return monthlyTarget / daysInMonth * dayNum; });
+  })();
   makeChart('chart-cumulative', {
     type: 'line',
     data: { labels: dates, datasets: [
       { label: 'Cumulative Revenue', data: cumRevs, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.08)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
-      { label: 'Target Pace', data: (() => { const daysInMonth = new Date(d.year, d.month, 0).getDate(); return d.daily.map(row => { const dayNum = parseLocalDate(row.date).getDate(); return monthlyTarget / daysInMonth * dayNum; }); })(), borderColor: '#f87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
+      { label: 'Target Pace', data: targetPace, borderColor: '#f87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
     ]},
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 9 } } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmtCr(ctx.raw) } } }, scales: { y: { ticks: { callback: v => fmtCr(v) } } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 9 } } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmtCr(ctx.raw) } } }, scales: { x: { ticks: { maxTicksLimit: isAll ? 14 : 12, font: { size: 9 } } }, y: { ticks: { callback: v => fmtCr(v) } } } }
   });
 
   const tbl = document.getElementById('daily-table');
@@ -1840,7 +1937,7 @@ function renderUnitTab(d) {
     })).sort((a,b) => b.total_revenue - a.total_revenue);
   }
   
-  document.getElementById('unit-period-label').textContent = `${MONTHS[d.month]} ${d.year}`;
+  document.getElementById('unit-period-label').textContent = periodLabel(d);
 
   if (units.length > 0) {
     makeChart('chart-unit-rank', {
@@ -1877,29 +1974,81 @@ function renderUnitTab(d) {
 function renderTargetTab(d) {
   const rev = d.totalRevenue;
   const target = d.annualTargetCr * 1e7;
+  const isAll = d.month === 'ALL';
   const monthlyTarget = target / 12;
-  const projectedAnnual = rev * 12;
+  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+
+  // Everything on this tab measures progress toward the ANNUAL target, so it
+  // must always use FY-to-date cumulative revenue (Apr 1 → end of selected
+  // period) — not just the currently selected month/period's own revenue.
+  // Checking June should show Apr+May+June combined, not June alone.
+  const ytdRev  = (typeof d.ytdRevenue === 'number') ? d.ytdRevenue : rev;
+  const ytdRows = (d.ytdDaily && d.ytdDaily.length > 0) ? d.ytdDaily : d.daily;
+  const fyStartYear = isAll ? d.year : (d.ytdFyStartYear || d.year);
+
+  // Build a real month-by-month breakdown from the YTD rows — works uniformly
+  // whether "All Months" or a single month is selected, since the YTD fetch
+  // always starts from April 1 of the fiscal year.
+  let monthlyActuals = null;
+  let daysElapsed = 0, totalDaysInFY = 0, lastDataDate = null;
+  if (ytdRows && ytdRows.length > 0) {
+    const byMonth = {};
+    ytdRows.forEach(row => {
+      const dt = parseLocalDate(row.date);
+      const key = dt.getFullYear() + '-' + (dt.getMonth() + 1);
+      byMonth[key] = (byMonth[key] || 0) + row.revenue;
+    });
+    monthlyActuals = months.map((_, i) => {
+      const calMonth = i < 9 ? i + 4 : i - 8;         // Apr..Dec -> 4..12, Jan..Mar -> 1..3
+      const calYear  = i < 9 ? fyStartYear : fyStartYear + 1;
+      const key = calYear + '-' + calMonth;
+      return Object.prototype.hasOwnProperty.call(byMonth, key) ? byMonth[key] : null;
+    });
+
+    // Day-based run-rate: pace off actual calendar days elapsed since the FY
+    // started (Apr 1) through the most recent date we have YTD data for.
+    const fyStart = new Date(fyStartYear, 3, 1);          // April 1
+    const fyEnd   = new Date(fyStartYear + 1, 2, 31);     // March 31
+    totalDaysInFY = Math.round((fyEnd - fyStart) / 86400000) + 1;
+    lastDataDate  = parseLocalDate(ytdRows[ytdRows.length - 1].date);
+    daysElapsed   = Math.max(1, Math.round((lastDataDate - fyStart) / 86400000) + 1);
+  }
+
+  const dailyRate       = daysElapsed > 0 ? (ytdRev / daysElapsed) : 0;
+  const avgMonthlyRate  = totalDaysInFY > 0 ? dailyRate * (totalDaysInFY / 12) : ytdRev;
+  const projectedAnnual = totalDaysInFY > 0 ? dailyRate * totalDaysInFY : ytdRev;
 
   document.getElementById('t-target').textContent   = '₹' + d.annualTargetCr.toFixed(2) + ' Cr';
-  document.getElementById('t-achieved').textContent = fmtCr(rev);
+  document.getElementById('t-achieved').textContent = fmtCr(ytdRev);
   document.getElementById('t-runrate').textContent  = fmtCr(projectedAnnual);
-  document.getElementById('t-gap').textContent      = fmtCr(target - rev);
-  
-  const fyMonth = d.month >= 4 ? d.month - 3 : d.month + 9;
-  document.getElementById('t-month-label').textContent = MONTHS[d.month] + ' ' + d.year + ' (Month ' + fyMonth + ' of 12)';
-  document.getElementById('monthly-rate-text').textContent = fmtCr(rev);
+  document.getElementById('t-gap').textContent      = fmtCr(target - ytdRev);
+
+  const upto = lastDataDate ? lastDataDate.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+  if (isAll) {
+    document.getElementById('t-month-label').textContent = `${fyLabel(fyStartYear)} — Cumulative through ${upto} (${daysElapsed} of ${totalDaysInFY} FY days)`;
+  } else {
+    const fyMonth = d.month >= 4 ? d.month - 3 : d.month + 9;
+    document.getElementById('t-month-label').textContent = `${MONTHS[d.month]} ${d.year} (Month ${fyMonth} of 12) — FY-to-date through ${upto}`;
+  }
+  document.getElementById('monthly-rate-text').textContent = fmtCr(avgMonthlyRate);
   document.getElementById('projected-text').textContent    = fmtCr(projectedAnnual);
 
   makeChart('chart-target-gauge', {
     type: 'doughnut',
-    data: { labels: ['Achieved','Remaining'], datasets: [{ data: [Math.min(rev,target), Math.max(0,target-rev)], backgroundColor: ['#34d399','#1f2a40'], borderWidth: 0 }] },
+    data: { labels: ['Achieved','Remaining'], datasets: [{ data: [Math.min(ytdRev,target), Math.max(0,target-ytdRev)], backgroundColor: ['#34d399','#1f2a40'], borderWidth: 0 }] },
     options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx=>ctx.label+': '+fmtCr(ctx.raw) } } } }
   });
 
-  const months = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-  const actuals = months.map((_, i) => i === 0 ? rev : null);
-  const projections = months.map((_, i) => rev);
-  const targets = months.map(() => monthlyTarget);
+  let actuals, projections, targets;
+  if (monthlyActuals) {
+    actuals = monthlyActuals;
+    projections = months.map(() => null);
+    targets = months.map(() => monthlyTarget);
+  } else {
+    actuals = months.map(() => null);
+    projections = months.map(() => null);
+    targets = months.map(() => monthlyTarget);
+  }
 
   makeChart('chart-projection', {
     type: 'bar',
