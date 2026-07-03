@@ -4060,11 +4060,28 @@ window.onload = async function() {
     document.getElementById('supaUrl').value = savedUrl;
     document.getElementById('supaKey').value = savedKey;
   }
-  const success = await testAndConnect(connectUrl, connectKey);
+
+  // Auto-connect retry: on a brand-new browser/system the very first request
+  // to Supabase can hit a transient hiccup (free-tier project waking from
+  // idle-pause, slow first DNS/TLS handshake, momentary network blip) even
+  // though the hardcoded credentials are completely valid. Rather than
+  // dropping straight to the manual "enter URL & key" form after one failed
+  // attempt, retry a few times with a short backoff first.
+  const MAX_AUTO_CONNECT_ATTEMPTS = 4;
+  let success = false;
+  for (let attempt = 1; attempt <= MAX_AUTO_CONNECT_ATTEMPTS; attempt++) {
+    if (attempt > 1) {
+      addLog(`🔁 Retry ${attempt - 1}/${MAX_AUTO_CONNECT_ATTEMPTS - 1} — first attempt may have hit a cold-start delay...`, 'warn');
+      await new Promise(r => setTimeout(r, attempt * 1200)); // 1.2s, 2.4s, 3.6s backoff
+    }
+    success = await testAndConnect(connectUrl, connectKey);
+    if (success) break;
+  }
+
   if (success) {
     addLog('⚡ Auto-connected. System ready — select unit, date range, and load a file.', 'ok');
   } else {
-    addLog('⚠️ Auto-connect failed. Click CONNECT button manually.', 'warn');
+    addLog(`⚠️ Auto-connect failed after ${MAX_AUTO_CONNECT_ATTEMPTS} attempts — this is usually a network issue, not a credentials issue (the URL/Key are hardwired into this file). Check your internet connection, then click CONNECT to try again.`, 'warn');
   }
 
   // Wire editKeysBtn
