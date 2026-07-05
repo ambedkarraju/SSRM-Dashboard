@@ -5,35 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>SSRM — Unit Data Upload Terminal v20</title>
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0b0f1a">
+<meta name="theme-color" content="#F5F7FA">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — POSTMARK (light/modern)
+   Matches index.html's palette: Paper #F5F7FA · Ink #12161F ·
+   Frank Red #C81E3A · Airmail Blue #1B4C8C ·
+   Stamp Green #147A4B · Ochre #B4740E
+═══════════════════════════════════════════════ */
 :root {
-  --ink:       #060810;
-  --deep:      #090c17;
-  --panel:     #0d1020;
-  --raised:    #111728;
-  --rim:       #1c2540;
-  --wire:      #243058;
-  --copper:    #c97b2a;
-  --copper2:   #e8962f;
-  --ember:     #f5b94a;
-  --glow-cu:   rgba(201,123,42,0.18);
-  --glow-cu2:  rgba(201,123,42,0.06);
-  --jade:      #1fd4a0;
-  --jade-dim:  rgba(31,212,160,0.1);
-  --crimson:   #e05454;
-  --crimson-dim:rgba(224,84,84,0.1);
-  --sky:       #4ea9f5;
-  --sky-dim:   rgba(78,169,245,0.1);
-  --text:      #c8d4ee;
-  --text2:     #6e83ad;
-  --text3:     #3a4d70;
-  --mono:      'Share Tech Mono', monospace;
-  --display:   'Rajdhani', sans-serif;
-  --body:      'Barlow', sans-serif;
+  --ink:       #F0F2F6;
+  --deep:      #ECEFF4;
+  --panel:     #FFFFFF;
+  --raised:    #FFFFFF;
+  --rim:       #E1E5EB;
+  --wire:      #C7CEDA;
+  --copper:    #C81E3A;
+  --copper2:   #E15571;
+  --ember:     #B4740E;
+  --glow-cu:   rgba(200,30,58,0.18);
+  --glow-cu2:  rgba(200,30,58,0.06);
+  --jade:      #147A4B;
+  --jade-dim:  rgba(20,122,75,0.1);
+  --crimson:   #9A1B2E;
+  --crimson-dim:rgba(154,27,46,0.1);
+  --sky:       #1B4C8C;
+  --sky-dim:   rgba(27,76,140,0.1);
+  --text:      #12161F;
+  --text2:     #5C6577;
+  --text3:     #97A0B0;
+  --mono:      'IBM Plex Mono', monospace;
+  --display:   'Barlow Condensed', sans-serif;
+  --body:      'Inter', sans-serif;
   --cond:      'Barlow Condensed', sans-serif;
 }
 
@@ -52,13 +58,13 @@ body {
 body::after {
   content:'';
   position:fixed; inset:0; pointer-events:none; z-index:999;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(18,22,31,0.012) 3px, rgba(18,22,31,0.012) 4px);
 }
 
 body::before {
   content:'';
   position:fixed; inset:0; pointer-events:none; z-index:0;
-  background-image: linear-gradient(rgba(28,37,64,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(28,37,64,0.4) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(27,76,140,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(27,76,140,0.06) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%);
 }
@@ -67,12 +73,12 @@ body::before {
   position:fixed; border-radius:50%; pointer-events:none; z-index:0;
   filter: blur(100px);
 }
-.orb-a { width:500px;height:300px; top:-80px;left:-80px; background:radial-gradient(ellipse, rgba(201,123,42,0.08) 0%, transparent 70%); }
-.orb-b { width:400px;height:400px; bottom:-100px;right:-80px; background:radial-gradient(ellipse, rgba(31,212,160,0.05) 0%, transparent 70%); }
+.orb-a { width:500px;height:300px; top:-80px;left:-80px; background:radial-gradient(ellipse, rgba(200,30,58,0.06) 0%, transparent 70%); }
+.orb-b { width:400px;height:400px; bottom:-100px;right:-80px; background:radial-gradient(ellipse, rgba(20,122,75,0.05) 0%, transparent 70%); }
 
 .topbar {
   position: sticky; top: 0; z-index: 200;
-  background: rgba(6,8,16,0.92);
+  background: rgba(255,255,255,0.85);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--rim);
   display: flex; align-items: stretch;
@@ -142,7 +148,7 @@ body::before {
 
 .nav-chip.active {
   color: var(--copper2);
-  border-color: rgba(201,123,42,0.3);
+  border-color: rgba(200,30,58,0.3);
   background: var(--glow-cu);
 }
 
@@ -174,7 +180,7 @@ body::before {
 }
 .conn-indicator.live .led {
   background: var(--jade);
-  box-shadow: 0 0 8px var(--jade), 0 0 16px rgba(31,212,160,0.4);
+  box-shadow: 0 0 8px var(--jade), 0 0 16px rgba(20,122,75,0.4);
   animation: ledBlink 2.5s ease-in-out infinite;
 }
 @keyframes ledBlink { 0%,100%{opacity:1} 50%{opacity:0.5} }
@@ -207,7 +213,7 @@ body::before {
 }
 .pipe-step:last-child { border-right: none; }
 
-.pipe-step.done { background: rgba(31,212,160,0.04); }
+.pipe-step.done { background: rgba(20,122,75,0.04); }
 .pipe-step.active { background: var(--glow-cu2); }
 
 .pipe-num {
@@ -225,13 +231,13 @@ body::before {
 .pipe-step.active .pipe-num {
   background: var(--copper);
   border-color: var(--copper2);
-  color: #000;
+  color: #fff;
   font-weight: bold;
   box-shadow: 0 0 10px var(--glow-cu);
 }
 .pipe-step.done .pipe-num {
   background: var(--jade-dim);
-  border-color: rgba(31,212,160,0.3);
+  border-color: rgba(20,122,75,0.3);
   color: var(--jade);
 }
 
@@ -327,13 +333,13 @@ body::before {
 .t-input::placeholder { color: var(--text3); }
 .t-input:focus {
   border-color: var(--copper);
-  background: rgba(201,123,42,0.04);
-  box-shadow: 0 0 0 2px var(--glow-cu), inset 0 1px 0 rgba(255,255,255,0.02);
+  background: rgba(200,30,58,0.04);
+  box-shadow: 0 0 0 2px var(--glow-cu), inset 0 1px 0 rgba(18,22,31,0.03);
 }
 
 .btn-primary {
   background: var(--copper);
-  color: #060810;
+  color: #fff;
   border: none;
   border-radius: 4px;
   padding: 10px 22px;
@@ -345,22 +351,22 @@ body::before {
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
-  box-shadow: 0 2px 12px rgba(201,123,42,0.35);
+  box-shadow: 0 2px 12px rgba(200,30,58,0.35);
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.btn-primary:hover { background: var(--copper2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(201,123,42,0.5); }
+.btn-primary:hover { background: var(--copper2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(200,30,58,0.5); }
 .btn-primary:active { transform: translateY(0); }
 
 .warn-strip {
   display: flex; align-items: flex-start; gap: 10px;
-  background: rgba(224,84,84,0.06);
-  border: 1px solid rgba(224,84,84,0.15);
+  background: rgba(154,27,46,0.06);
+  border: 1px solid rgba(154,27,46,0.15);
   border-left: 3px solid var(--crimson);
   padding: 9px 14px;
   border-radius: 0 4px 4px 0;
   font-family: var(--mono);
   font-size: 10px;
-  color: rgba(224,84,84,0.8);
+  color: rgba(154,27,46,0.8);
   line-height: 1.5;
   letter-spacing: 0.02em;
 }
@@ -372,7 +378,7 @@ body::before {
 .live-badge {
   display: flex; align-items: center; gap: 10px;
   background: var(--jade-dim);
-  border: 1px solid rgba(31,212,160,0.2);
+  border: 1px solid rgba(20,122,75,0.2);
   border-radius: 4px;
   padding: 8px 16px;
   font-family: var(--mono);
@@ -390,7 +396,7 @@ body::before {
 
 .btn-ghost {
   background: transparent;
-  border: 1px solid rgba(224,84,84,0.3);
+  border: 1px solid rgba(154,27,46,0.3);
   color: var(--crimson);
   border-radius: 4px;
   padding: 7px 16px;
@@ -449,10 +455,10 @@ body::before {
   background-position: right 11px center;
   padding-right: 28px;
 }
-.t-select option { background: #0d1020; }
+.t-select option { background: #FFFFFF; }
 .t-select:focus, .t-date:focus, .t-text:focus {
   border-color: var(--copper);
-  background-color: rgba(201,123,42,0.03);
+  background-color: rgba(200,30,58,0.03);
   box-shadow: 0 0 0 2px var(--glow-cu);
 }
 input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepia(1) hue-rotate(10deg); cursor: pointer; }
@@ -602,7 +608,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   color: white;
 }
 .alert-btn-primary:hover {
-  background: #c0392b;
+  background: #7A1526;
   transform: translateY(-1px);
 }
 .alert-btn-secondary {
@@ -628,16 +634,16 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   transition: all 0.15s;
 }
 .dbi-tab-btn:hover { color: var(--text); border-color: var(--wire); }
-.dbi-tab-btn.active { background: var(--copper); color: #000; border-color: var(--copper); }
+.dbi-tab-btn.active { background: var(--copper); color: #fff; border-color: var(--copper); }
 
 /* ── DB Inspector data tables ────────────────────────────────────────────── */
 .dbi-table { width:100%; border-collapse:collapse; font-size:12px; }
 .dbi-table th { padding:8px 12px; text-align:left; font-family:var(--mono); font-size:10px; color:var(--text2); font-weight:600; letter-spacing:0.06em; background:var(--raised); border-bottom:1px solid var(--rim); }
-.dbi-table td { padding:7px 12px; border-bottom:1px solid rgba(255,255,255,0.03); }
-.dbi-table tr:hover td { background:rgba(255,255,255,0.02); }
+.dbi-table td { padding:7px 12px; border-bottom:1px solid rgba(18,22,31,0.07); }
+.dbi-table tr:hover td { background:rgba(18,22,31,0.03); }
 .dbi-badge-ok  { display:inline-block; background:var(--jade-dim); color:var(--jade); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
 .dbi-badge-err { display:inline-block; background:var(--crimson-dim); color:var(--crimson); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
-.dbi-badge-warn { display:inline-block; background:rgba(245,185,74,0.12); color:var(--ember); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
+.dbi-badge-warn { display:inline-block; background:rgba(180,116,14,0.12); color:var(--ember); font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:3px; }
 
 /* ── Auth modal ─────────────────────────────────────────────────────────── */
 .auth-card {
@@ -647,7 +653,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   max-width: 420px;
   width: 90%;
   padding: 28px 28px 24px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(201,123,42,0.08);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(200,30,58,0.08);
   animation: alertSlideIn 0.25s ease;
 }
 .auth-title {
@@ -685,9 +691,9 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   border-radius: 3px;
   margin-bottom: 18px;
 }
-.auth-action-badge.append  { background: rgba(31,212,160,0.12); color: var(--jade);    border: 1px solid rgba(31,212,160,0.3); }
-.auth-action-badge.replace { background: rgba(245,185,74,0.12);  color: var(--ember);   border: 1px solid rgba(245,185,74,0.3); }
-.auth-action-badge.delete  { background: rgba(224,84,84,0.12);   color: var(--crimson); border: 1px solid rgba(224,84,84,0.3); }
+.auth-action-badge.append  { background: rgba(20,122,75,0.12); color: var(--jade);    border: 1px solid rgba(20,122,75,0.3); }
+.auth-action-badge.replace { background: rgba(180,116,14,0.12);  color: var(--ember);   border: 1px solid rgba(180,116,14,0.3); }
+.auth-action-badge.delete  { background: rgba(154,27,46,0.12);   color: var(--crimson); border: 1px solid rgba(154,27,46,0.3); }
 .auth-field {
   margin-bottom: 14px;
 }
@@ -714,14 +720,14 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 }
 .auth-field input:focus {
   border-color: var(--copper);
-  box-shadow: 0 0 0 2px rgba(201,123,42,0.12);
+  box-shadow: 0 0 0 2px rgba(200,30,58,0.12);
 }
 .auth-error {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--crimson);
-  background: rgba(224,84,84,0.08);
-  border: 1px solid rgba(224,84,84,0.2);
+  background: rgba(154,27,46,0.08);
+  border: 1px solid rgba(154,27,46,0.2);
   border-radius: 3px;
   padding: 7px 10px;
   margin-bottom: 14px;
@@ -803,7 +809,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 .dropzone::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, rgba(201,123,42,0.04) 0%, transparent 65%);
+  background: radial-gradient(ellipse at center, rgba(200,30,58,0.04) 0%, transparent 65%);
   opacity: 0; transition: opacity 0.3s;
 }
 
@@ -941,21 +947,21 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   gap: 8px;
 }
 .btn-upload {
-  background: linear-gradient(105deg, #0f8a60, #076e4a);
-  border: 1px solid rgba(31,212,160,0.2);
-  color: #d0fff3;
-  box-shadow: 0 4px 20px rgba(7,110,74,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+  background: linear-gradient(105deg, #1E9E63, #147A4B);
+  border: 1px solid rgba(20,122,75,0.3);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(20,122,75,0.28), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .btn-delete {
-  background: linear-gradient(105deg, #8b1a1a, #5c0e0e);
-  border: 1px solid rgba(224,84,84,0.3);
-  color: #ffb5b5;
-  box-shadow: 0 4px 20px rgba(224,84,84,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+  background: linear-gradient(105deg, #C23A52, #9A1B2E);
+  border: 1px solid rgba(154,27,46,0.3);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(154,27,46,0.28), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 .btn-upload::before, .btn-delete::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 50%);
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
   opacity: 0; transition: opacity 0.2s;
 }
 .btn-upload:not(:disabled):hover, .btn-delete:not(:disabled):hover { transform: translateY(-2px); }
@@ -977,7 +983,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 
 
 .terminal {
-  background: #030508;
+  background: #FFFFFF;
   border: 1px solid var(--rim);
   border-radius: 6px;
   overflow: hidden;
@@ -995,9 +1001,9 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   width: 10px; height: 10px;
   border-radius: 50%;
 }
-.td-r { background: #3d1515; border: 1px solid #5a2020; }
-.td-y { background: #3d3015; border: 1px solid #5a4a20; }
-.td-g { background: #153d25; border: 1px solid #205a38; }
+.td-r { background: #9A1B2E; border: 1px solid #7A1526; }
+.td-y { background: #B4740E; border: 1px solid #8F5B0A; }
+.td-g { background: #147A4B; border: 1px solid #0F5C38; }
 
 .term-label {
   font-family: var(--mono);
@@ -1021,7 +1027,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 .term-body::-webkit-scrollbar-thumb { background: var(--rim); border-radius: 2px; }
 
 .log-line {
-  padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.025);
+  padding: 3px 0; border-bottom: 1px solid rgba(18,22,31,0.06);
   display: flex; gap: 12px; line-height: 1.5;
 }
 .log-ts { color: var(--text3); flex-shrink: 0; }
@@ -1044,21 +1050,21 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   padding: 13px 20px;
   border-radius: 5px;
   font-family: var(--body); font-size: 13px; font-weight: 500;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 8px 32px rgba(18,22,31,0.16);
   animation: toastRise 0.35s cubic-bezier(0.34,1.56,0.64,1);
   max-width: 400px;
 }
 .toast-ok {
-  background: #071f14;
-  border: 1px solid rgba(31,212,160,0.25);
+  background: #EAF7F0;
+  border: 1px solid rgba(20,122,75,0.25);
   border-left: 3px solid var(--jade);
-  color: #9ff0d8;
+  color: #0F5C38;
 }
 .toast-err {
-  background: #1e0a0a;
-  border: 1px solid rgba(224,84,84,0.25);
+  background: #FCEAEC;
+  border: 1px solid rgba(154,27,46,0.25);
   border-left: 3px solid var(--crimson);
-  color: #f5a0a0;
+  color: #7A1526;
 }
 @keyframes toastRise { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
 
@@ -1080,27 +1086,27 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 }
 .quick-connect-btn:hover {
   background: var(--jade);
-  color: #000;
+  color: #fff;
 }
 
 .conn-status {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
-  border-radius: 4px;
+  padding: 4px 14px;
+  border-radius: 100px;
   font-family: var(--mono);
   font-size: 10px;
 }
 .conn-status.connected {
   background: var(--jade-dim);
   color: var(--jade);
-  border: 1px solid var(--jade);
+  border: 1.5px dashed rgba(20,122,75,0.5);
 }
 .conn-status.disconnected {
   background: var(--crimson-dim);
   color: var(--crimson);
-  border: 1px solid var(--crimson);
+  border: 1.5px dashed rgba(154,27,46,0.5);
 }
 
 /* ── User Management Panel ──────────────────────────────────────────────── */
@@ -1129,13 +1135,13 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 }
 .um-table td {
   padding: 9px 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(18,22,31,0.07);
   font-family: var(--body);
   font-size: 12px;
   color: var(--text2);
   vertical-align: middle;
 }
-.um-table tr:hover td { background: rgba(255,255,255,0.015); }
+.um-table tr:hover td { background: rgba(18,22,31,0.025); }
 
 .role-badge {
   display: inline-flex; align-items: center; gap: 5px;
@@ -1147,8 +1153,8 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
-.role-badge.admin  { background: rgba(201,123,42,0.14); color: var(--copper2); border: 1px solid rgba(201,123,42,0.35); }
-.role-badge.user   { background: rgba(78,169,245,0.1);  color: var(--sky);     border: 1px solid rgba(78,169,245,0.25); }
+.role-badge.admin  { background: rgba(200,30,58,0.14); color: var(--copper2); border: 1px solid rgba(200,30,58,0.35); }
+.role-badge.user   { background: rgba(27,76,140,0.1);  color: var(--sky);     border: 1px solid rgba(27,76,140,0.25); }
 
 .um-btn {
   font-family: var(--mono);
@@ -1161,10 +1167,10 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   transition: all 0.2s;
   border: none;
 }
-.um-btn-del  { background: rgba(224,84,84,0.1); color: var(--crimson); border: 1px solid rgba(224,84,84,0.3); }
-.um-btn-del:hover { background: rgba(224,84,84,0.2); }
-.um-btn-pwd  { background: rgba(78,169,245,0.1); color: var(--sky); border: 1px solid rgba(78,169,245,0.25); }
-.um-btn-pwd:hover { background: rgba(78,169,245,0.2); }
+.um-btn-del  { background: rgba(154,27,46,0.1); color: var(--crimson); border: 1px solid rgba(154,27,46,0.3); }
+.um-btn-del:hover { background: rgba(154,27,46,0.2); }
+.um-btn-pwd  { background: rgba(27,76,140,0.1); color: var(--sky); border: 1px solid rgba(27,76,140,0.25); }
+.um-btn-pwd:hover { background: rgba(27,76,140,0.2); }
 
 .um-add-form {
   display: flex; flex-direction: column; gap: 10px;
@@ -1190,7 +1196,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   outline: none;
   transition: border-color 0.2s;
 }
-.um-input:focus { border-color: var(--copper); box-shadow: 0 0 0 2px rgba(201,123,42,0.1); }
+.um-input:focus { border-color: var(--copper); box-shadow: 0 0 0 2px rgba(200,30,58,0.1); }
 .um-input-row { display: flex; gap: 8px; }
 .um-select {
   width: 100%;
@@ -1210,10 +1216,10 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   transition: border-color 0.2s;
 }
 .um-select:focus { border-color: var(--copper); }
-.um-select option { background: #0d1020; }
+.um-select option { background: #FFFFFF; }
 .um-add-btn {
   background: linear-gradient(105deg, var(--copper), var(--copper2));
-  color: #060810;
+  color: #fff;
   border: none;
   border-radius: 4px;
   padding: 10px;
@@ -1224,21 +1230,21 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 10px rgba(201,123,42,0.3);
+  box-shadow: 0 2px 10px rgba(200,30,58,0.3);
 }
-.um-add-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,123,42,0.45); }
+.um-add-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,30,58,0.45); }
 .um-add-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 .um-lock-notice {
   display: flex; align-items: center; gap: 10px;
-  background: rgba(224,84,84,0.06);
-  border: 1px solid rgba(224,84,84,0.2);
+  background: rgba(154,27,46,0.06);
+  border: 1px solid rgba(154,27,46,0.2);
   border-left: 3px solid var(--crimson);
   border-radius: 0 4px 4px 0;
   padding: 10px 14px;
   font-family: var(--mono);
   font-size: 10px;
-  color: rgba(224,84,84,0.75);
+  color: rgba(154,27,46,0.75);
   letter-spacing: 0.04em;
 }
 .um-note {
@@ -1258,8 +1264,8 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   width: 24px; height: 4px;
   border-radius: 2px;
 }
-.auth-level-pip.done  { background: var(--jade); box-shadow: 0 0 6px rgba(31,212,160,0.5); }
-.auth-level-pip.active { background: var(--copper); box-shadow: 0 0 6px rgba(201,123,42,0.5); animation: pipPulse 1.2s ease-in-out infinite; }
+.auth-level-pip.done  { background: var(--jade); box-shadow: 0 0 6px rgba(20,122,75,0.5); }
+.auth-level-pip.active { background: var(--copper); box-shadow: 0 0 6px rgba(200,30,58,0.5); animation: pipPulse 1.2s ease-in-out infinite; }
 .auth-level-pip.idle  { background: var(--rim); }
 @keyframes pipPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 .auth-level-label {
@@ -1273,8 +1279,8 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 /* ── Inline Delete Auth Panel ───────────────────────────────────────────── */
 .inline-auth-panel {
   display: none;
-  background: rgba(224,84,84,0.06);
-  border: 1px solid rgba(224,84,84,0.3);
+  background: rgba(154,27,46,0.06);
+  border: 1px solid rgba(154,27,46,0.3);
   border-left: 3px solid var(--crimson);
   border-radius: 0 6px 6px 0;
   padding: 16px 18px;
@@ -1323,12 +1329,12 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 }
 .inline-auth-field input:focus {
   border-color: var(--crimson);
-  box-shadow: 0 0 0 2px rgba(224,84,84,0.1);
+  box-shadow: 0 0 0 2px rgba(154,27,46,0.1);
 }
 .inline-auth-btn {
-  background: linear-gradient(105deg, #8b1a1a, #5c0e0e);
-  border: 1px solid rgba(224,84,84,0.4);
-  color: #ffb5b5;
+  background: linear-gradient(105deg, #C23A52, #9A1B2E);
+  border: 1px solid rgba(154,27,46,0.4);
+  color: #fff;
   border-radius: 4px;
   padding: 9px 18px;
   font-family: var(--cond);
@@ -1340,7 +1346,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
   white-space: nowrap;
   transition: all 0.2s;
 }
-.inline-auth-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(224,84,84,0.4); }
+.inline-auth-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(154,27,46,0.4); }
 .inline-auth-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .inline-auth-error {
   font-family: var(--mono);
@@ -1360,7 +1366,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
 
 /* Nav chip clickable */
 .nav-chip.clickable { cursor: pointer; transition: all 0.2s; }
-.nav-chip.clickable:hover { color: var(--copper2); border-color: rgba(201,123,42,0.3); background: var(--glow-cu); }
+.nav-chip.clickable:hover { color: var(--copper2); border-color: rgba(200,30,58,0.3); background: var(--glow-cu); }
 </style>
 </head>
 </head>
@@ -1382,7 +1388,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
     <div class="nav-chip clickable" id="navUsers" onclick="switchTab('users')">👤 User Management</div>
     <div class="nav-chip clickable" id="navDB" onclick="switchTab('db')">🗄️ DB Inspector</div>
     <div class="nav-sep"></div>
-    <div class="nav-chip" style="font-size:9px;color:#e8f5e9;background:#2d6a4f;border-color:#3a8a63;border-radius:3px;padding:3px 10px;">by B Ambedkar Raju</div>
+    <div class="nav-chip" style="font-size:9px;color:#fff;background:linear-gradient(135deg,#C81E3A 0%,#E15571 60%,#C81E3A 100%);border:none;border-radius:20px;padding:4px 12px;box-shadow:0 3px 10px rgba(200,30,58,0.3);">by B Ambedkar Raju</div>
   </div>
   <div class="topbar-status">
     <div class="conn-indicator" id="topConnState">
@@ -1453,7 +1459,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
             </div>
             <span style="font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:0.04em;" id="connUrlDisplay">read / write enabled</span>
           </div>
-          <button class="btn-ghost" id="editKeysBtn" style="border-color:rgba(224,84,84,0.4);color:var(--crimson);padding:7px 18px;font-size:11px;letter-spacing:0.08em;display:none;align-items:center;gap:7px;">
+          <button class="btn-ghost" id="editKeysBtn" style="border-color:rgba(154,27,46,0.4);color:var(--crimson);padding:7px 18px;font-size:11px;letter-spacing:0.08em;display:none;align-items:center;gap:7px;">
             &#8599; EDIT KEYS
           </button>
         </div>
@@ -1466,7 +1472,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
       <div class="panel-title"><span class="htick" style="background:var(--sky);box-shadow:0 0 6px var(--sky);"></span>Upload Configuration</div>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="panel-tag">Excel/CSV → Supabase</div>
-        <button id="newOperationBtn" onclick="resetForNewOperation()" title="Clear file and stats for a fresh operation" style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:var(--sky-dim);color:var(--sky);border:1px solid rgba(78,169,245,0.35);border-radius:3px;padding:4px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;">&#8635; NEW OPERATION</button>
+        <button id="newOperationBtn" onclick="resetForNewOperation()" title="Clear file and stats for a fresh operation" style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:var(--sky-dim);color:var(--sky);border:1px solid rgba(27,76,140,0.35);border-radius:3px;padding:4px 12px;cursor:pointer;display:flex;align-items:center;gap:5px;">&#8635; NEW OPERATION</button>
       </div>
     </div>
     <div class="panel-body">
@@ -1657,7 +1663,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
                   <option value="admin">Admin — Full access (Append, Delete + User Mgmt)</option>
                 </select>
               </div>
-              <div id="umAddError" style="font-family:var(--mono);font-size:11px;color:var(--crimson);display:none;padding:6px 10px;background:rgba(224,84,84,0.08);border-radius:3px;border:1px solid rgba(224,84,84,0.2);"></div>
+              <div id="umAddError" style="font-family:var(--mono);font-size:11px;color:var(--crimson);display:none;padding:6px 10px;background:rgba(154,27,46,0.08);border-radius:3px;border:1px solid rgba(154,27,46,0.2);"></div>
               <button class="um-add-btn" onclick="umAddUser()">＋ ADD USER</button>
             </div>
           </div>
@@ -1714,8 +1720,9 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
           <button class="dbi-tab-btn"        id="dbiTab-dupes"      onclick="dbiSwitchTab('dupes')">⚠️ Duplicates</button>
           <button class="dbi-tab-btn"        id="dbiTab-activity"   onclick="dbiSwitchTab('activity')">👤 User Activity</button>
           <button class="dbi-tab-btn"        id="dbiTab-repair"     onclick="dbiSwitchTab('repair')">🔧 Repair Tools</button>
+          <button class="dbi-tab-btn"        id="dbiTab-addunit"    onclick="dbiSwitchTab('addunit')" style="background:var(--jade-dim, rgba(30,158,99,0.12));color:var(--jade);border-color:var(--jade);">➕ Add Unit</button>
           <button class="dbi-tab-btn"        id="dbiTab-delete"     onclick="dbiSwitchTab('delete')" style="margin-left:auto;background:var(--crimson-dim);color:var(--crimson);border-color:var(--crimson);">🗑 Delete Data</button>
-          <button onclick="dbInspectorLoad()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⟳ REFRESH ALL</button>
+          <button onclick="dbInspectorLoad()" style="background:var(--copper);color:#fff;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⟳ REFRESH ALL</button>
         </div>
         <div id="dbInspStatus" style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:14px;">Click REFRESH ALL to load data...</div>
 
@@ -1741,7 +1748,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
               <option value="10">October</option><option value="11">November</option><option value="12">December</option>
               <option value="1">January</option><option value="2">February</option><option value="3">March</option>
             </select>
-            <button onclick="dbiLoadHealth()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Health Check</button>
+            <button onclick="dbiLoadHealth()" style="background:var(--copper);color:#fff;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Health Check</button>
           </div>
           <div id="healthGrid"></div>
         </div>
@@ -1761,7 +1768,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
               <option value="10">October</option><option value="11">November</option><option value="12">December</option>
               <option value="1">January</option><option value="2">February</option><option value="3">March</option>
             </select>
-            <button onclick="dbiLoadCrossUnit()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Summary</button>
+            <button onclick="dbiLoadCrossUnit()" style="background:var(--copper);color:#fff;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Summary</button>
             <button onclick="dbiExportCrossUnit()" style="background:var(--raised);color:var(--ember);border:1px solid var(--rim);padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⬇ Export CSV</button>
           </div>
           <div id="crossUnitTable" style="overflow-x:auto;"></div>
@@ -1781,21 +1788,21 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
               <option value="10">October</option><option value="11">November</option><option value="12">December</option>
               <option value="1">January</option><option value="2">February</option><option value="3">March</option>
             </select>
-            <button onclick="dbiLoadMissingDays()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Detect Missing Days</button>
+            <button onclick="dbiLoadMissingDays()" style="background:var(--copper);color:#fff;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Detect Missing Days</button>
           </div>
           <div id="missingDaysTable" style="overflow-x:auto;"></div>
         </div>
 
         <!-- DUPLICATES -->
         <div id="dbiPane-dupes" style="display:none;">
-          <button onclick="dbiLoadDuplicates()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;margin-bottom:14px;">Scan for Duplicates</button>
+          <button onclick="dbiLoadDuplicates()" style="background:var(--copper);color:#fff;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;margin-bottom:14px;">Scan for Duplicates</button>
           <div id="dupesTable" style="overflow-x:auto;"></div>
         </div>
 
         <!-- USER ACTIVITY -->
         <div id="dbiPane-activity" style="display:none;">
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-            <button onclick="dbiLoadActivity()" style="background:var(--copper);color:#000;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Activity Log</button>
+            <button onclick="dbiLoadActivity()" style="background:var(--copper);color:#fff;border:none;padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Load Activity Log</button>
             <button onclick="dbiExportActivity()" style="background:var(--raised);color:var(--ember);border:1px solid var(--rim);padding:7px 16px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">⬇ Export CSV</button>
           </div>
           <div id="activityTable" style="overflow-x:auto;"></div>
@@ -1818,7 +1825,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
                   <option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
                   <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option>
                 </select>
-                <button onclick="dbiRepairMonthlySummary()" style="background:var(--jade);color:#000;border:none;padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Run Repair</button>
+                <button onclick="dbiRepairMonthlySummary()" style="background:var(--jade);color:#fff;border:none;padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Run Repair</button>
                 <button onclick="dbiRepairAllMonthly()" style="background:var(--raised);color:var(--jade);border:1px solid var(--jade);padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Repair ALL Units & Months</button>
               </div>
               <div id="repairSummaryLog" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
@@ -1826,10 +1833,46 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.3) sepi
             <div style="background:var(--raised);border:1px solid var(--rim);border-radius:6px;padding:16px;">
               <div style="font-family:var(--mono);font-size:12px;color:var(--ember);font-weight:700;margin-bottom:6px;">🏷️ Fix Bulk Customer Flags</div>
               <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Sets is_bulk = true for all customers with bulk_customer_id or contract_id — all units, all months.</div>
-              <button onclick="dbiRepairBulkFlags()" style="background:var(--jade);color:#000;border:none;padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Fix Bulk Flags — All Units All Months</button>
+              <button onclick="dbiRepairBulkFlags()" style="background:var(--jade);color:#fff;border:none;padding:7px 18px;border-radius:4px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;">Fix Bulk Flags — All Units All Months</button>
               <div id="repairBulkLog" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
             </div>
           </div>
+        </div>
+
+        <!-- ADD BUSINESS UNIT -->
+        <div id="dbiPane-addunit" style="display:none;">
+          <div style="background:var(--raised);border:1px solid var(--rim);border-radius:6px;padding:16px;margin-bottom:20px;font-size:12px;color:var(--text2);line-height:1.6;">
+            <strong style="color:var(--jade);">One-time setup (only needed once, ever):</strong> for a new unit created here to
+            appear on the live dashboard, your Supabase <code>business_units</code> table needs a
+            <code>dashboard_active</code> boolean column. If you haven't added it yet, run this once in the
+            Supabase SQL Editor:
+            <pre style="background:var(--ink);border:1px solid var(--rim);border-radius:4px;padding:10px;margin-top:8px;overflow-x:auto;font-family:var(--mono);font-size:11px;color:var(--sky);">ALTER TABLE business_units ADD COLUMN IF NOT EXISTS dashboard_active boolean NOT NULL DEFAULT false;
+
+UPDATE business_units SET dashboard_active = true WHERE code IN (
+  'BNPL_HYDERABAD','BPC_BOLLARAM','BPC_DR_BRAOU','BPC_JEEDIMETLA',
+  'HYDERABAD_DECCAN_RS_TMO','PBC_AUTONAGAR','NSH_COUNTER','SECUNDERABAD_RS_TMO',
+  'NAMPALLY_HYDERABAD_BPC_II','BPC_DEVARAYAMJAL_I_II','BPC_POCHARAM','PBC_AUTONAGAR_COUNTER'
+);</pre>
+            Until you run this, new units created below will still save to the database, but the dashboard and
+            upload dropdown will fall back to the original 12-unit list. This form works either way.
+          </div>
+
+          <div style="background:var(--raised);border:1px solid var(--jade);border-radius:6px;padding:16px;max-width:520px;margin-bottom:20px;">
+            <div style="font-family:var(--mono);font-size:12px;color:var(--jade);font-weight:700;margin-bottom:10px;">➕ Create New Business Unit</div>
+            <div style="display:grid;gap:10px;margin-bottom:14px;">
+              <label style="font-size:11px;color:var(--text2);">Unit Code <span style="color:var(--text2);">(letters/numbers only — auto-formatted, e.g. BPC_UPPAL)</span></label>
+              <input id="newUnitCode" type="text" placeholder="e.g. BPC_UPPAL" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);text-transform:uppercase;">
+              <label style="font-size:11px;color:var(--text2);">Display Name</label>
+              <input id="newUnitName" type="text" placeholder="e.g. BPC Uppal" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">
+              <label style="font-size:11px;color:var(--text2);">Annual Target — FY 2026-27 (₹ Crore)</label>
+              <input id="newUnitTarget" type="number" step="0.01" min="0" placeholder="e.g. 15" style="background:var(--ink);border:1px solid var(--rim);color:var(--text);padding:8px;border-radius:4px;font-family:var(--mono);">
+            </div>
+            <button onclick="dbiCreateBusinessUnit()" style="width:100%;background:var(--jade);color:#fff;border:none;padding:10px;border-radius:4px;font-family:var(--mono);font-weight:700;cursor:pointer;">➕ CREATE BUSINESS UNIT</button>
+            <div id="addUnitLog" style="margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
+          </div>
+
+          <div style="font-family:var(--mono);font-size:12px;color:var(--ember);font-weight:700;margin-bottom:8px;">Currently Active Units (visible on dashboard)</div>
+          <div id="addUnitExistingList" style="overflow-x:auto;max-width:520px;"></div>
         </div>
 
         <!-- DELETE DATA -->
@@ -1963,7 +2006,7 @@ function showAuthModal(action, levelLabel = null) {
         <div class="auth-subtitle">${isLevel2 ? 'Admin confirmation required · Level 2 of 2' : 'Authorised personnel only · Level 1 of 2'} · SSRM Data Terminal</div>
         ${levelBarHtml}
         <div class="auth-action-badge ${actionMeta.cls}">${actionMeta.label} &nbsp;·&nbsp; ${actionMeta.desc}</div>
-        ${isLevel2 ? '<div style="font-family:var(--mono);font-size:10px;color:var(--ember);margin-bottom:12px;padding:7px 10px;background:rgba(245,185,74,0.08);border-radius:3px;border:1px solid rgba(245,185,74,0.25);">⚠️ This operation requires <strong>Admin</strong> credentials to proceed.</div>' : ''}
+        ${isLevel2 ? '<div style="font-family:var(--mono);font-size:10px;color:var(--ember);margin-bottom:12px;padding:7px 10px;background:rgba(180,116,14,0.08);border-radius:3px;border:1px solid rgba(180,116,14,0.25);">⚠️ This operation requires <strong>Admin</strong> credentials to proceed.</div>' : ''}
         <div class="auth-field">
           <label>User ID</label>
           <input type="text" id="authUserId" placeholder="${isLevel2 ? 'Enter admin user ID' : 'Enter your user ID'}" autocomplete="username" spellcheck="false">
@@ -2188,6 +2231,7 @@ async function testAndConnect(url,key){
       
       addLog('✅ Supabase connection established — read/write access confirmed.','ok');
       await loadAuthUsers();
+      await populateUnitSelectDropdown();
       
       document.getElementById('topConnState').classList.add('live'); 
       document.getElementById('topConnText').textContent='CONNECTED';
@@ -4294,7 +4338,7 @@ function umChangePwd(userId) {
           <button type="button" class="eye-btn" id="cpEye2" title="Show password">👁️</button>
         </div>
       </div>
-      <div id="cpError" style="font-family:var(--mono);font-size:11px;color:var(--crimson);display:none;padding:6px 10px;background:rgba(224,84,84,0.08);border-radius:3px;margin-bottom:10px;"></div>
+      <div id="cpError" style="font-family:var(--mono);font-size:11px;color:var(--crimson);display:none;padding:6px 10px;background:rgba(154,27,46,0.08);border-radius:3px;margin-bottom:10px;"></div>
       <div class="auth-buttons">
         <button class="auth-btn-cancel" id="cpCancelBtn">Cancel</button>
         <button class="auth-btn-confirm" id="cpSaveBtn">Save Password →</button>
@@ -4349,7 +4393,7 @@ const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','
 
 // ── Sub-tab switcher ─────────────────────────────────────────────────────────
 function dbiSwitchTab(tab) {
-  ['overview','health','crossunit','missing','dupes','activity','repair','delete'].forEach(t => {
+  ['overview','health','crossunit','missing','dupes','activity','repair','addunit','delete'].forEach(t => {
     document.getElementById(`dbiTab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`dbiPane-${t}`).style.display = t === tab ? '' : 'none';
   });
@@ -4362,6 +4406,115 @@ function dbiPopulateUnitSelects(units) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = opts;
   });
+}
+
+// ── Render the "currently active units" reference table in the Add-Unit tab ──
+function dbiRenderAddUnitList() {
+  const el = document.getElementById('addUnitExistingList');
+  if (!el) return;
+  if (!_dbiAllUnits || _dbiAllUnits.length === 0) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:12px;">No active units loaded yet — click REFRESH ALL.</div>';
+    return;
+  }
+  const rows = _dbiAllUnits.map(u =>
+    `<tr><td style="padding:6px 10px;font-family:var(--mono);font-size:11px;color:var(--ember);border-bottom:1px solid var(--rim);">${u.code}</td>` +
+    `<td style="padding:6px 10px;font-size:12px;border-bottom:1px solid var(--rim);">${u.name}</td></tr>`
+  ).join('');
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--rim);">` +
+    `<th style="text-align:left;padding:6px 10px;font-size:11px;color:var(--text2);">CODE</th>` +
+    `<th style="text-align:left;padding:6px 10px;font-size:11px;color:var(--text2);">NAME</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ── Create a new business unit (admin self-service) ───────────────────────────
+async function dbiCreateBusinessUnit() {
+  const logEl = document.getElementById('addUnitLog');
+  const setLog = (msg, color) => { logEl.textContent = msg; logEl.style.color = color; };
+
+  if (!isConnected) { setLog('⚠️ Not connected to Supabase.', 'var(--crimson)'); return; }
+
+  const codeRaw = document.getElementById('newUnitCode').value.trim();
+  const nameRaw = document.getElementById('newUnitName').value.trim();
+  const targetRaw = document.getElementById('newUnitTarget').value.trim();
+
+  if (!codeRaw || !nameRaw || !targetRaw) {
+    setLog('⚠️ Please fill in Code, Name, and Annual Target.', 'var(--crimson)');
+    return;
+  }
+  const code = codeRaw.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  if (!code) {
+    setLog('⚠️ Unit code must contain at least one letter or number.', 'var(--crimson)');
+    return;
+  }
+  const target = parseFloat(targetRaw);
+  if (isNaN(target) || target <= 0) {
+    setLog('⚠️ Annual Target must be a positive number (in Crores).', 'var(--crimson)');
+    return;
+  }
+
+  setLog('⏳ Checking if code is already in use...', 'var(--text2)');
+  const existsRes = await supaFetch('GET', `business_units?select=id&code=eq.${code}`);
+  if (existsRes.ok && existsRes.data && existsRes.data.length > 0) {
+    setLog(`❌ A unit with code "${code}" already exists. Choose a different code.`, 'var(--crimson)');
+    return;
+  }
+
+  setLog('⏳ Creating business unit...', 'var(--text2)');
+  let insertRes = await supaFetch('POST', 'business_units', {
+    code, name: nameRaw, annual_target_cr: target, dashboard_active: true
+  });
+
+  let migrationPending = false;
+  if (!insertRes.ok) {
+    // dashboard_active column likely doesn't exist yet on this database — retry without it.
+    insertRes = await supaFetch('POST', 'business_units', { code, name: nameRaw, annual_target_cr: target });
+    migrationPending = true;
+  }
+
+  if (!insertRes.ok) {
+    setLog(`❌ Failed to create unit: ${JSON.stringify(insertRes.data || 'unknown error')}`, 'var(--crimson)');
+    return;
+  }
+
+  if (migrationPending) {
+    logEl.innerHTML = `✅ Created "${nameRaw}" (${code}) — but the <code>dashboard_active</code> column doesn't exist in your database yet, so this unit won't appear on the dashboard or upload dropdown until you run the one-time SQL migration shown above.`;
+    logEl.style.color = 'var(--ember)';
+  } else {
+    setLog(`✅ Created "${nameRaw}" (${code}) with an annual target of ₹${target} Cr. It's now available in the upload dropdown and on the dashboard.`, 'var(--jade)');
+  }
+
+  document.getElementById('newUnitCode').value = '';
+  document.getElementById('newUnitName').value = '';
+  document.getElementById('newUnitTarget').value = '';
+
+  await dbInspectorLoad();
+  await populateUnitSelectDropdown();
+}
+
+// ── Dynamically (re)populate the main Upload Configuration unit dropdown ─────
+// Uses dashboard_active when available; falls back to the legacy 12-unit list
+// (matching dbInspectorLoad's fallback) so nothing breaks pre-migration.
+async function populateUnitSelectDropdown() {
+  const sel = document.getElementById('unitSelect');
+  if (!sel || !isConnected) return;
+  const currentVal = sel.value;
+
+  let units = [];
+  const uRes = await supaFetch('GET', 'business_units?select=code,name&dashboard_active=eq.true&order=name');
+  if (uRes.ok && uRes.data && uRes.data.length > 0) {
+    units = uRes.data;
+  } else {
+    units = [
+      ['BNPL_HYDERABAD','BNPL Hyderabad'], ['BPC_BOLLARAM','BPC Bollaram'],
+      ['BPC_DR_BRAOU','BPC DR BRAOU'], ['BPC_JEEDIMETLA','BPC Jeedimetla'],
+      ['HYDERABAD_DECCAN_RS_TMO','Hyderabad Deccan RS TMO'], ['PBC_AUTONAGAR','PBC Autonagar'],
+      ['NSH_COUNTER','NSH Counter'], ['SECUNDERABAD_RS_TMO','Secunderabad RS TMO'],
+      ['NAMPALLY_HYDERABAD_BPC_II','Nampally Hyderabad BPC II'], ['BPC_DEVARAYAMJAL_I_II','BPC Devarayamjal I and II'],
+      ['BPC_POCHARAM','BPC Pocharam'], ['PBC_AUTONAGAR_COUNTER','PBC Autonagar(Counter)']
+    ].map(([code, name]) => ({ code, name }));
+  }
+
+  sel.innerHTML = '<option value="">— Select Unit —</option>' + units.map(u => `<option value="${u.code}">${u.name}</option>`).join('');
+  if (currentVal && units.some(u => u.code === currentVal)) sel.value = currentVal;
 }
 
 // ── MAIN LOAD: fetches all base data ────────────────────────────────────────
@@ -4381,17 +4534,30 @@ async function dbInspectorLoad() {
       'monthly_summary?select=unit_id,period_year,period_month,total_revenue,total_transactions&order=period_year.desc,period_month.desc');
     _dbiCrossCache = (mRes.ok && mRes.data) ? mRes.data : [];
 
-    // 3. Business units — hardcoded to exact 12 valid operational units only
-    const VALID_UNIT_CODES = new Set([
+    // 3. Business units — prefer the dashboard_active flag (set automatically by
+    // the "Add Unit" tool going forward). Falls back to the legacy hardcoded
+    // whitelist if the database hasn't had the one-time SQL migration run yet
+    // (i.e. the dashboard_active column doesn't exist).
+    const LEGACY_VALID_UNIT_CODES = new Set([
       'BNPL_HYDERABAD', 'BPC_BOLLARAM', 'BPC_DR_BRAOU', 'BPC_JEEDIMETLA',
       'HYDERABAD_DECCAN_RS_TMO', 'PBC_AUTONAGAR', 'NSH_COUNTER',
       'SECUNDERABAD_RS_TMO', 'NAMPALLY_HYDERABAD_BPC_II',
       'BPC_DEVARAYAMJAL_I_II', 'BPC_POCHARAM', 'PBC_AUTONAGAR_COUNTER'
     ]);
-    const uRes = await supaFetch('GET', 'business_units?select=id,name,code&order=name');
-    const allUnits = (uRes.ok && uRes.data) ? uRes.data : [];
-    _dbiAllUnits = allUnits.filter(u => VALID_UNIT_CODES.has(u.code));
+    let allUnits = [];
+    let usingLegacyUnitFilter = false;
+    const uRes = await supaFetch('GET', 'business_units?select=id,name,code&dashboard_active=eq.true&order=name');
+    if (uRes.ok && uRes.data) {
+      allUnits = uRes.data;
+    } else {
+      usingLegacyUnitFilter = true;
+      const uResLegacy = await supaFetch('GET', 'business_units?select=id,name,code&order=name');
+      const raw = (uResLegacy.ok && uResLegacy.data) ? uResLegacy.data : [];
+      allUnits = raw.filter(u => LEGACY_VALID_UNIT_CODES.has(u.code));
+    }
+    _dbiAllUnits = allUnits;
     dbiPopulateUnitSelects(_dbiAllUnits);
+    dbiRenderAddUnitList();
 
     // 4. Daily revenue — unit_id, txn_date, revenue for counting
     const dRes = await supaFetch('GET',
@@ -4400,7 +4566,7 @@ async function dbInspectorLoad() {
 
     _dbiActivityCache = [..._dbiRunsCache];
 
-    statusEl.textContent = `✅ Loaded — ${_dbiAllUnits.length} units · ${_dbiRunsCache.length} upload records · ${_dbiDailyCache.length} daily rows · refreshed ${new Date().toLocaleTimeString('en-IN')}`;
+    statusEl.textContent = `✅ Loaded — ${_dbiAllUnits.length} units · ${_dbiRunsCache.length} upload records · ${_dbiDailyCache.length} daily rows · refreshed ${new Date().toLocaleTimeString('en-IN')}` + (usingLegacyUnitFilter ? '  ⚠️ dashboard_active column not found — using legacy 12-unit list. See "Add Unit" tab for migration SQL.' : '');
 
     // Render whichever tab is active
     dbiRenderOverview();
