@@ -3,7 +3,7 @@
 //  Service Worker — Cache-first with network fallback
 // ═══════════════════════════════════════════════
 
-const CACHE_NAME = 'ssrm-v10';
+const CACHE_NAME = 'ssrm-v11';
 
 // Core shell assets to pre-cache on install
 const PRECACHE_ASSETS = [
