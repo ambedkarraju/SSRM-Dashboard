@@ -5,47 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SSRM Revenue Intelligence Dashboard — Live</title>
 <link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#0b0f1a">
+<meta name="theme-color" content="#F5F7FA">
 <meta name="description" content="SSRM Revenue Intelligence — Hyderabad Sorting Division Live Dashboard">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════
-   DESIGN SYSTEM — PRECISION DARK INTELLIGENCE
+   DESIGN SYSTEM — POSTMARK (light/modern)
+   Named palette: Paper #F5F7FA · Ink #12161F ·
+   Frank Red #C81E3A · Airmail Blue #1B4C8C ·
+   Stamp Green #147A4B · Ochre #B4740E
 ═══════════════════════════════════════════════ */
 :root {
   /* Core palette */
-  --void:      #060810;
-  --base:      #0b0f1a;
-  --surface:   #0f1420;
-  --card:      #131929;
-  --card-hi:   #171e2e;
-  --border:    rgba(255,255,255,0.06);
-  --border-hi: rgba(255,255,255,0.12);
+  --void:      #F0F2F6;
+  --base:      #F5F7FA;
+  --surface:   #E8EBF1;
+  --card:      #FFFFFF;
+  --card-hi:   #FFFFFF;
+  --border:    rgba(18,22,31,0.09);
+  --border-hi: rgba(18,22,31,0.16);
 
   /* Accent system */
-  --gold:      #f0a500;
-  --gold-dim:  rgba(240,165,0,0.08);
-  --gold-glow: rgba(240,165,0,0.2);
-  --sky:       #2db8f5;
-  --sky-dim:   rgba(45,184,245,0.08);
-  --jade:      #00d4a0;
-  --jade-dim:  rgba(0,212,160,0.08);
-  --coral:     #ff5f6d;
-  --coral-dim: rgba(255,95,109,0.08);
-  --violet:    #9b7fff;
-  --violet-dim:rgba(155,127,255,0.08);
+  --gold:      #C81E3A;
+  --gold-dim:  rgba(200,30,58,0.08);
+  --gold-glow: rgba(200,30,58,0.18);
+  --sky:       #1B4C8C;
+  --sky-dim:   rgba(27,76,140,0.08);
+  --jade:      #147A4B;
+  --jade-dim:  rgba(20,122,75,0.08);
+  --coral:     #9A1B2E;
+  --coral-dim: rgba(154,27,46,0.08);
+  --violet:    #6D5BD0;
+  --violet-dim:rgba(109,91,208,0.08);
 
   /* Text */
-  --text-1:    #f0f2f7;
-  --text-2:    #8892a4;
-  --text-3:    #4d5870;
+  --text-1:    #12161F;
+  --text-2:    #5C6577;
+  --text-3:    #97A0B0;
 
   /* Typography */
-  --font-display: 'Outfit', sans-serif;
-  --font-body:    'Space Grotesk', sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
 
   /* Geometry */
   --radius-sm: 6px;
@@ -72,8 +75,8 @@ body::before {
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(45,184,245,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(45,184,245,0.015) 1px, transparent 1px);
+    linear-gradient(rgba(27,76,140,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27,76,140,0.035) 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
   z-index: 0;
@@ -82,7 +85,7 @@ body::before {
 /* ── MODAL ─────────────────────────────────── */
 .modal-overlay {
   position: fixed; inset: 0;
-  background: rgba(6,8,16,0.92);
+  background: rgba(15,20,30,0.55);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex; align-items: center; justify-content: center;
@@ -93,7 +96,7 @@ body::before {
   border-radius: var(--radius-xl);
   padding: 40px;
   width: 520px; max-width: 96vw;
-  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: 0 40px 80px rgba(18,22,31,0.18), 0 0 0 1px rgba(18,22,31,0.05);
   position: relative; overflow: hidden;
 }
 .modal::before {
@@ -123,8 +126,8 @@ body::before {
 .modal-input::placeholder { color: var(--text-3); }
 .btn-modal {
   width: 100%; margin-top: 8px;
-  background: linear-gradient(135deg, var(--gold), #e09000);
-  color: #000; border: none;
+  background: linear-gradient(135deg, var(--gold), #8F1626);
+  color: #fff; border: none;
   padding: 13px 24px;
   border-radius: var(--radius-md);
   font-family: var(--font-display); font-weight: 700; font-size: 15px;
@@ -137,7 +140,7 @@ body::before {
 /* ── HEADER ─────────────────────────────────── */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(11,15,26,0.95);
+  background: rgba(255,255,255,0.88);
   backdrop-filter: blur(20px) saturate(1.4);
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
@@ -147,11 +150,11 @@ body::before {
 .header-left { display: flex; align-items: center; gap: 14px; }
 .logo-icon {
   width: 38px; height: 38px;
-  background: linear-gradient(135deg, var(--gold), #c07800);
+  background: linear-gradient(135deg, var(--gold), #8F1626);
   border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
   font-size: 18px;
-  box-shadow: 0 4px 16px rgba(240,165,0,0.3);
+  box-shadow: 0 4px 16px rgba(200,30,58,0.3);
   flex-shrink: 0;
 }
 .header-title h1 {
@@ -170,10 +173,10 @@ body::before {
 
 .live-badge {
   display: flex; align-items: center; gap: 6px;
-  padding: 5px 12px;
+  padding: 5px 14px;
   border-radius: 100px;
   background: var(--jade-dim);
-  border: 1px solid rgba(0,212,160,0.2);
+  border: 1.5px dashed rgba(20,122,75,0.5);
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
   color: var(--jade);
 }
@@ -183,8 +186,8 @@ body::before {
   animation: livePulse 2s ease-in-out infinite;
 }
 @keyframes livePulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,212,160,0.4); }
-  50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(0,212,160,0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(20,122,75,0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(20,122,75,0); }
 }
 .header-date {
   font-family: var(--font-mono); font-size: 10px;
@@ -193,7 +196,7 @@ body::before {
 .btn-upload-link {
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em;
   color: var(--sky); text-decoration: none;
-  border: 1px solid rgba(45,184,245,0.25);
+  border: 1px solid rgba(27,76,140,0.25);
   padding: 6px 14px; border-radius: var(--radius-sm);
   background: var(--sky-dim);
   transition: all 0.2s;
@@ -202,7 +205,7 @@ body::before {
   align-items: center;
   gap: 6px;
 }
-.btn-upload-link:hover { background: rgba(45,184,245,0.15); border-color: var(--sky); }
+.btn-upload-link:hover { background: rgba(27,76,140,0.15); border-color: var(--sky); }
 
 /* ── PWA INSTALL BADGE ─────────────────────────────────── */
 /* Sizes are +15% over the original baseline */
@@ -233,7 +236,7 @@ body::before {
 #pwa-badge:hover {
   transform: translateX(-50%) scale(1.05);
   box-shadow:
-    0 0 0 1px rgba(240,165,0,0.25),
+    0 0 0 1px rgba(200,30,58,0.25),
     0 10px 36px rgba(0,0,0,0.65),
     0 0 36px var(--gold-glow);
 }
@@ -243,12 +246,12 @@ body::before {
 }
 @keyframes badgeGlow {
   0%,100% { box-shadow: 0 0 0 1px var(--gold-dim), 0 6px 28px rgba(0,0,0,0.6), 0 0 22px var(--gold-glow); }
-  50%     { box-shadow: 0 0 0 1px rgba(240,165,0,0.18), 0 6px 28px rgba(0,0,0,0.6), 0 0 36px var(--gold-glow); }
+  50%     { box-shadow: 0 0 0 1px rgba(200,30,58,0.18), 0 6px 28px rgba(0,0,0,0.6), 0 0 36px var(--gold-glow); }
 }
 .pwa-badge-icon {
   width: 37px; height: 37px;           /* 32 → 37 */
   border-radius: 9px;                  /* 8 → 9 */
-  border: 1px solid rgba(240,165,0,0.35);
+  border: 1px solid rgba(200,30,58,0.35);
   box-shadow: 0 0 10px var(--gold-dim);
   flex-shrink: 0;
   display: block;
@@ -271,7 +274,7 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: linear-gradient(135deg, var(--gold) 0%, #ffd060 50%, var(--gold) 100%);
+  background: linear-gradient(135deg, var(--gold) 0%, #E8899A 50%, var(--gold) 100%);
   color: var(--void);
   border: none;
   border-radius: 100px;
@@ -287,7 +290,7 @@ body::before {
   box-shadow: 0 0 12px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,0.25);
   transition: transform 0.15s, box-shadow 0.15s;
 }
-.pwa-badge-btn:hover { transform: scale(1.06); box-shadow: 0 0 20px rgba(240,165,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25); }
+.pwa-badge-btn:hover { transform: scale(1.06); box-shadow: 0 0 20px rgba(200,30,58,0.5), inset 0 1px 0 rgba(255,255,255,0.25); }
 .pwa-badge-btn::after {
   content: '';
   position: absolute; inset: 0;
@@ -320,8 +323,8 @@ body::before {
   background: var(--coral-dim);
 }
 /* Installed state — swap gold for sky */
-#pwa-badge.installed { border-color: rgba(45,184,245,0.35); box-shadow: 0 0 0 1px var(--sky-dim), 0 6px 28px rgba(0,0,0,0.6), 0 0 22px var(--sky-dim); }
-#pwa-badge.installed .pwa-badge-btn { background: linear-gradient(135deg, var(--sky) 0%, #1a9fd4 100%); box-shadow: 0 0 12px var(--sky-dim); }
+#pwa-badge.installed { border-color: rgba(27,76,140,0.35); box-shadow: 0 0 0 1px var(--sky-dim), 0 6px 28px rgba(0,0,0,0.6), 0 0 22px var(--sky-dim); }
+#pwa-badge.installed .pwa-badge-btn { background: linear-gradient(135deg, var(--sky) 0%, #2D6CB5 100%); box-shadow: 0 0 12px var(--sky-dim); }
 #pwa-badge.installed .pwa-badge-sub { color: var(--sky); }
 /* Dismissed */
 #pwa-badge.dismissed { opacity: 0; transform: translateX(-50%) translateY(20px); pointer-events: none; transition: opacity 0.35s, transform 0.35s; }
@@ -331,7 +334,7 @@ body::before {
   bottom: 90px;
   left: 50%;
   transform: translateX(-50%) translateY(10px);
-  background: linear-gradient(135deg, var(--gold), #ffd060);
+  background: linear-gradient(135deg, var(--gold), #E8899A);
   color: var(--void);
   padding: 9px 22px;                   /* 8/20 → 9/22 */
   border-radius: 100px;
@@ -351,7 +354,7 @@ body::before {
 .fy-countdown { display: flex; gap: 6px; }
 .count-box {
   background: var(--gold-dim);
-  border: 1px solid rgba(240,165,0,0.2);
+  border: 1px solid rgba(200,30,58,0.2);
   border-radius: var(--radius-sm);
   padding: 3px 10px; text-align: center;
 }
@@ -399,7 +402,7 @@ body::before {
 }
 .uploader-close:hover {
   background: var(--coral);
-  color: #000;
+  color: #fff;
 }
 .uploader-frame {
   flex: 1;
@@ -441,14 +444,14 @@ body::before {
 .filter-info { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); margin-left: auto; align-self: flex-end; }
 .btn-refresh {
   background: var(--gold);
-  color: #000; border: none;
+  color: #fff; border: none;
   padding: 8px 20px; border-radius: var(--radius-sm);
   font-family: var(--font-display); font-weight: 700; font-size: 13px;
   cursor: pointer; letter-spacing: 0.3px;
   transition: all 0.2s; align-self: flex-end;
-  box-shadow: 0 2px 12px rgba(240,165,0,0.2);
+  box-shadow: 0 2px 12px rgba(200,30,58,0.2);
 }
-.btn-refresh:hover { background: #e09000; box-shadow: 0 4px 20px rgba(240,165,0,0.35); }
+.btn-refresh:hover { background: #8F1626; box-shadow: 0 4px 20px rgba(200,30,58,0.35); }
 
 /* ── TABS ────────────────────────────────────── */
 .tabs {
@@ -473,8 +476,8 @@ body::before {
 .tab:hover { color: var(--text-1); background: var(--surface); }
 .tab.active {
   background: var(--gold);
-  color: #000; font-weight: 700;
-  box-shadow: 0 2px 12px rgba(240,165,0,0.3);
+  color: #fff; font-weight: 700;
+  box-shadow: 0 2px 12px rgba(200,30,58,0.3);
 }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; animation: fadeUp 0.25s ease; }
@@ -557,7 +560,7 @@ body::before {
 }
 .progress-bar-fill {
   height: 100%; width: 0%;
-  background: linear-gradient(90deg, var(--gold), #ffcf40);
+  background: linear-gradient(90deg, var(--gold), #E15571);
   border-radius: 4px; transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .target-meta {
@@ -593,19 +596,19 @@ body::before {
 .data-table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
 .data-table td {
   padding: 10px 14px; font-size: 13px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(18,22,31,0.06);
   color: var(--text-2);
 }
 .data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover td { background: rgba(255,255,255,0.02); color: var(--text-1); }
+.data-table tr:hover td { background: rgba(18,22,31,0.03); color: var(--text-1); }
 .data-table td.num { text-align: right; font-family: var(--font-mono); font-size: 12px; }
 .daily-scroll { overflow-x: auto; }
 
 /* Rank medals */
 .rank { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
-.rank-1 { color: #f0b429; }
-.rank-2 { color: #8899bb; }
-.rank-3 { color: #a06030; }
+.rank-1 { color: #B8860B; }
+.rank-2 { color: #8892A0; }
+.rank-3 { color: #A0632E; }
 
 /* Chips */
 .chip {
@@ -614,15 +617,15 @@ body::before {
   font-size: 10px; font-family: var(--font-mono); letter-spacing: 0.04em;
   border: 1px solid transparent;
 }
-.chip-green { background: var(--jade-dim); color: var(--jade); border-color: rgba(0,212,160,0.2); }
-.chip-amber { background: var(--gold-dim); color: var(--gold); border-color: rgba(240,165,0,0.2); }
-.chip-blue  { background: var(--sky-dim);  color: var(--sky);  border-color: rgba(45,184,245,0.2); }
-.chip-red   { background: var(--coral-dim);color: var(--coral);border-color: rgba(255,95,109,0.2); }
-.chip-violet { background: var(--violet-dim); color: var(--violet); border-color: rgba(155,127,255,0.2); }
+.chip-green { background: var(--jade-dim); color: var(--jade); border-color: rgba(20,122,75,0.2); }
+.chip-amber { background: var(--gold-dim); color: var(--gold); border-color: rgba(200,30,58,0.2); }
+.chip-blue  { background: var(--sky-dim);  color: var(--sky);  border-color: rgba(27,76,140,0.2); }
+.chip-red   { background: var(--coral-dim);color: var(--coral);border-color: rgba(154,27,46,0.2); }
+.chip-violet { background: var(--violet-dim); color: var(--violet); border-color: rgba(109,91,208,0.2); }
 
 /* Bar inline */
 .bar-inline { display: flex; align-items: center; gap: 8px; }
-.bar-mini { height: 5px; background: linear-gradient(90deg, var(--gold), #e09000); border-radius: 2px; }
+.bar-mini { height: 5px; background: linear-gradient(90deg, var(--gold), #8F1626); border-radius: 2px; }
 
 /* ── UNIT GRID ────────────────────────────────── */
 .unit-grid {
@@ -646,7 +649,7 @@ body::before {
 }
 .unit-card:hover { border-color: var(--border-hi); transform: translateY(-2px); }
 .unit-card:hover::before, .unit-card.selected::before { opacity: 1; }
-.unit-card.selected { border-color: rgba(240,165,0,0.3); background: var(--gold-dim); }
+.unit-card.selected { border-color: rgba(200,30,58,0.3); background: var(--gold-dim); }
 .unit-name { font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 6px; line-height: 1.3; }
 .unit-rev { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--gold); }
 .unit-txn { font-size: 10px; color: var(--text-3); margin-top: 3px; font-family: var(--font-mono); }
@@ -660,7 +663,7 @@ body::before {
 @keyframes skelAnim { 0% { background-position: 200%; } 100% { background-position: -200%; } }
 .loading-overlay {
   position: absolute; inset: 0;
-  background: rgba(6,8,16,0.7);
+  background: rgba(240,242,246,0.75);
   display: flex; align-items: center; justify-content: center;
   border-radius: var(--radius-lg); z-index: 5;
 }
@@ -727,7 +730,7 @@ body::before {
     <div class="fy-countdown" id="countdown"></div>
     <div class="live-badge"><div class="live-dot"></div><span id="live-label">CONNECTING</span></div>
     <div class="header-date" id="headerDate"></div>
-    <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.1em;color:#060810;background:linear-gradient(135deg,#f0a500 0%,#ffd060 60%,#f0a500 100%);border-radius:20px;padding:5px 14px;white-space:nowrap;box-shadow:0 0 12px rgba(240,165,0,0.6),0 0 24px rgba(240,165,0,0.3),inset 0 1px 0 rgba(255,255,255,0.3);">BY B AMBEDKAR RAJU</div>
+    <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.1em;color:#fff;background:linear-gradient(135deg,#C81E3A 0%,#E15571 60%,#C81E3A 100%);border-radius:20px;padding:5px 14px;white-space:nowrap;box-shadow:0 4px 14px rgba(200,30,58,0.35),inset 0 1px 0 rgba(255,255,255,0.25);">BY B AMBEDKAR RAJU</div>
     <button onclick="openuploader()" class="btn-upload-link">📤 Upload Data</button>
   </div>
 </header>
@@ -788,11 +791,11 @@ body::before {
 
   <!-- ════ OVERVIEW ════ -->
   <div class="tab-panel active" id="tab-overview">
-    <div id="overview-partial-banner" style="display:none;align-items:center;gap:14px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);border-radius:10px;padding:14px 20px;margin-bottom:18px;flex-wrap:wrap;">
+    <div id="overview-partial-banner" style="display:none;align-items:center;gap:14px;background:rgba(180,116,14,0.10);border:1px solid rgba(180,116,14,0.35);border-radius:10px;padding:14px 20px;margin-bottom:18px;flex-wrap:wrap;">
       <span style="font-size:22px;">⚠️</span>
       <div style="flex:1;min-width:220px;">
-        <div style="font-weight:700;color:#f0a500;font-size:13px;margin-bottom:3px;">Partial data — Products &amp; Customers tabs are empty</div>
-        <div style="color:#8892a4;font-size:12px;line-height:1.6;">A partial delete wiped product/customer aggregates for this month. <strong style="color:#f0f2f7;">Daily KPIs and charts are correct.</strong> To restore, re-upload the surviving dates in <strong style="color:#f0a500;">APPEND mode</strong>. <span class="ovb-dates" style="display:inline;font-family:JetBrains Mono,monospace;font-size:11px;color:#f0a500;"></span></div>
+        <div style="font-weight:700;color:#C81E3A;font-size:13px;margin-bottom:3px;">Partial data — Products &amp; Customers tabs are empty</div>
+        <div style="color:#5C6577;font-size:12px;line-height:1.6;">A partial delete wiped product/customer aggregates for this month. <strong style="color:#12161F;">Daily KPIs and charts are correct.</strong> To restore, re-upload the surviving dates in <strong style="color:#C81E3A;">APPEND mode</strong>. <span class="ovb-dates" style="display:inline;font-family:JetBrains Mono,monospace;font-size:11px;color:#C81E3A;"></span></div>
       </div>
     </div>
     <div class="kpi-grid">
@@ -1141,7 +1144,7 @@ function parseLocalDate(d) {
 }
 const fmtDate = d => parseLocalDate(d).toLocaleDateString('en-IN', {day:'2-digit', month:'short'});
 const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const COLORS = ['#f59e0b','#38bdf8','#00d4a0','#ff5f6d','#9b7fff','#ff8c42','#e879f9','#4ade80','#facc15','#60a5fa'];
+const COLORS = ['#C81E3A','#1B4C8C','#147A4B','#B4740E','#6D5BD0','#C2410C','#0E7490','#9333A6','#4D7C0F','#BE185D'];
 
 function normaliseProduct(raw) {
   if (!raw) return 'Other';
@@ -1166,8 +1169,8 @@ function makeChart(id, config) {
   chartInstances[id] = new Chart(ctx, config);
 }
 
-Chart.defaults.color = '#64748b';
-Chart.defaults.borderColor = '#1f2a40';
+Chart.defaults.color = '#5C6577';
+Chart.defaults.borderColor = '#E1E5EB';
 Chart.defaults.font.family = "'JetBrains Mono', monospace";
 Chart.defaults.font.size = 11;
 
@@ -1234,16 +1237,27 @@ async function init() {
   document.getElementById('gen-date').textContent = now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 
   try {
-    const dbUnits = await supa('business_units?select=id,code,name,annual_target_cr&order=name');
-    if (dbUnits && dbUnits.length > 0) {
+    // Prefer the dashboard_active flag (set automatically by the uploader's
+    // "Add Unit" tool going forward). Falls back to the legacy hardcoded
+    // whitelist if the one-time SQL migration hasn't been run yet on this
+    // database (i.e. the dashboard_active column doesn't exist) — in which
+    // case behavior is identical to before.
+    let dbUnits;
+    try {
+      dbUnits = await supa('business_units?select=id,code,name,annual_target_cr&dashboard_active=eq.true&order=name');
+    } catch (eActive) {
+      const allDbUnits = await supa('business_units?select=id,code,name,annual_target_cr&order=name').catch(() => []);
       const masterCodes = BUSINESS_UNITS_MASTER.map(m => m.code);
-      const filtered = dbUnits.filter(db => masterCodes.includes(db.code));
-      UNITS = filtered.map(db => {
+      dbUnits = allDbUnits.filter(db => masterCodes.includes(db.code));
+    }
+
+    if (dbUnits && dbUnits.length > 0) {
+      UNITS = dbUnits.map(db => {
         const master = BUSINESS_UNITS_MASTER.find(m => m.code === db.code);
         return {
           id: db.id,
           code: db.code,
-          name: master ? master.name : db.name,
+          name: master ? master.name : (db.name || db.code),
           annual_target_cr: master ? master.annual_target_cr : (db.annual_target_cr || 0)
         };
       });
@@ -1564,19 +1578,22 @@ async function loadData() {
 
     let unitSummary = [];
     try {
-      let summaries;
-      try {
-        summaries = await supa(`monthly_summary?${periodParams}&select=unit_id,total_revenue,total_transactions`);
-      } catch(viewErr) {
-        const allDaily = await supa(`daily_revenue?txn_date=gte.${startDate}&txn_date=lt.${endDate}&select=unit_id,revenue,transactions`);
-        const aggMap = {};
-        allDaily.forEach(r => {
-          if (!aggMap[r.unit_id]) aggMap[r.unit_id] = { unit_id: r.unit_id, total_revenue: 0, total_transactions: 0 };
-          aggMap[r.unit_id].total_revenue += +r.revenue;
-          aggMap[r.unit_id].total_transactions += +r.transactions;
-        });
-        summaries = Object.values(aggMap);
-      }
+      // monthly_summary is a manually-triggered recalculation cache (via the
+      // DB Inspector's "Recalculate Monthly Summary" repair tool) — it does
+      // NOT update automatically on every upload, so it can silently go
+      // stale or be missing rows for individual units even when other units
+      // for the same month are present. Unit Rankings needs to be correct
+      // the moment data is uploaded, so it always computes directly from
+      // daily_revenue (the table every upload writes to immediately) instead
+      // of trusting that cache.
+      const allDaily = await supa(`daily_revenue?txn_date=gte.${startDate}&txn_date=lt.${endDate}&select=unit_id,revenue,transactions`).catch(() => []);
+      const aggMap = {};
+      allDaily.forEach(r => {
+        if (!aggMap[r.unit_id]) aggMap[r.unit_id] = { unit_id: r.unit_id, total_revenue: 0, total_transactions: 0 };
+        aggMap[r.unit_id].total_revenue += +r.revenue;
+        aggMap[r.unit_id].total_transactions += +r.transactions;
+      });
+      const summaries = Object.values(aggMap);
       unitSummary = summaries
         .filter(s => UNITS.find(u => u.id === s.unit_id))
         .map(s => {
@@ -1616,7 +1633,7 @@ async function loadData() {
 
 function showNoDataMessage() {
   const msg = '⚠️ No data available for the selected period. Please change the month/year or upload data.';
-  document.getElementById('kpi-rev').innerHTML = `<span style="font-size:14px;font-weight:600;color:#f59e0b;line-height:1.5;">${msg}</span>`;
+  document.getElementById('kpi-rev').innerHTML = `<span style="font-size:14px;font-weight:600;color:#B4740E;line-height:1.5;">${msg}</span>`;
   document.getElementById('kpi-txn').textContent = '—';
   document.getElementById('kpi-pct').textContent = '—';
   document.getElementById('kpi-remain').textContent = '—';
@@ -1685,7 +1702,7 @@ function _ovPlaceholder(canvasId, cls, html) {
   if (prev) prev.remove();
   const div = document.createElement('div');
   div.className = cls;
-  div.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#8892a4;font-family:JetBrains Mono,monospace;font-size:11px;text-align:center;line-height:1.8;padding:12px;';
+  div.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#5C6577;font-family:JetBrains Mono,monospace;font-size:11px;text-align:center;line-height:1.8;padding:12px;';
   div.innerHTML = html;
   el.parentElement.appendChild(div);
 }
@@ -1701,7 +1718,7 @@ function renderOverviewCharts(d) {
   _ovRestore('chart-daily-overview','daily-nd');
   makeChart('chart-daily-overview', {
     type: 'line',
-    data: { labels: d.daily.map(x => fmtDate(x.date)), datasets: [{ label: 'Revenue', data: d.daily.map(x => x.revenue), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.08)', tension: 0.4, fill: true, pointRadius: 2, borderWidth: 2 }] },
+    data: { labels: d.daily.map(x => fmtDate(x.date)), datasets: [{ label: 'Revenue', data: d.daily.map(x => x.revenue), borderColor: '#B4740E', backgroundColor: 'rgba(180,116,14,0.08)', tension: 0.4, fill: true, pointRadius: 2, borderWidth: 2 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } }, scales: { x: { ticks: { maxTicksLimit: 10, font: { size: 9 } } }, y: { ticks: { callback: v => fmt(v,0), font: { size: 9 } } } } }
   });
 
@@ -1713,11 +1730,11 @@ function renderOverviewCharts(d) {
     _ovRestore('chart-source-pie','src-nd');
     makeChart('chart-source-pie', {
       type: 'pie',
-      data: { labels: srcLabels, datasets: [{ data: srcVals, backgroundColor: ['#f59e0b','#38bdf8','#00d4a0','#ff5f6d','#9b7fff'], borderWidth: 2, borderColor: '#161b28' }] },
+      data: { labels: srcLabels, datasets: [{ data: srcVals, backgroundColor: ['#B4740E','#2D6CB5','#147A4B','#C23A52','#6D5BD0'], borderWidth: 2, borderColor: '#FFFFFF' }] },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx => ctx.label+': '+fmt(ctx.raw)+' ('+(d.totalRevenue>0?(ctx.raw/d.totalRevenue*100).toFixed(1):'0')+'%)' } } } }
     });
   } else {
-    _ovPlaceholder('chart-source-pie','src-nd','📊 No source data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+    _ovPlaceholder('chart-source-pie','src-nd','📊 No source data<br><span style="color:#C81E3A;font-size:10px;">Re-upload in APPEND mode</span>');
   }
 
   // Doughnut — NEVER pass empty data to Chart.js
@@ -1727,11 +1744,11 @@ function renderOverviewCharts(d) {
     _ovRestore('chart-product-donut','prod-nd');
     makeChart('chart-product-donut', {
       type: 'doughnut',
-      data: { labels: [...top5p.map(p=>p.name), othRev>0?'Others':null].filter(Boolean), datasets: [{ data: [...top5p.map(p=>p.revenue), othRev>0?othRev:null].filter(x=>x!==null), backgroundColor: COLORS, borderWidth: 2, borderColor: '#161b28' }] },
+      data: { labels: [...top5p.map(p=>p.name), othRev>0?'Others':null].filter(Boolean), datasets: [{ data: [...top5p.map(p=>p.revenue), othRev>0?othRev:null].filter(x=>x!==null), backgroundColor: COLORS, borderWidth: 2, borderColor: '#FFFFFF' }] },
       options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { padding: 8, font: { size: 9 } } }, tooltip: { callbacks: { label: ctx => ctx.label+': '+fmt(ctx.raw) } } } }
     });
   } else {
-    _ovPlaceholder('chart-product-donut','prod-nd','📦 No product data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+    _ovPlaceholder('chart-product-donut','prod-nd','📦 No product data<br><span style="color:#C81E3A;font-size:10px;">Re-upload in APPEND mode</span>');
   }
 
   // Bar charts — guard empty products
@@ -1743,7 +1760,7 @@ function renderOverviewCharts(d) {
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: v => fmtNum(v), font: { size: 9 } } } } }
     });
   } else {
-    _ovPlaceholder('chart-txn-bar','txn-nd','📉 No transaction data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+    _ovPlaceholder('chart-txn-bar','txn-nd','📉 No transaction data<br><span style="color:#C81E3A;font-size:10px;">Re-upload in APPEND mode</span>');
   }
 
   if (d.customers && d.customers.length > 0) {
@@ -1754,7 +1771,7 @@ function renderOverviewCharts(d) {
       options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmt(ctx.raw) } } }, scales: { x: { ticks: { callback: v => fmt(v,0), font: { size: 9 } } } } }
     });
   } else {
-    _ovPlaceholder('chart-cust-top5','cust-nd','🏢 No customer data<br><span style="color:#f0a500;font-size:10px;">Re-upload in APPEND mode</span>');
+    _ovPlaceholder('chart-cust-top5','cust-nd','🏢 No customer data<br><span style="color:#C81E3A;font-size:10px;">Re-upload in APPEND mode</span>');
   }
 }
 
@@ -1766,15 +1783,15 @@ function renderDailyCharts(d) {
   makeChart('chart-daily-full', {
     type: 'bar',
     data: { labels: dates, datasets: [
-      { type: 'bar', label: 'Revenue (₹)', data: revs, backgroundColor: 'rgba(245,158,11,0.6)', borderColor: '#f59e0b', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
-      { type: 'line', label: 'Transactions', data: txns, borderColor: '#38bdf8', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2, yAxisID: 'y2' }
+      { type: 'bar', label: 'Revenue (₹)', data: revs, backgroundColor: 'rgba(180,116,14,0.6)', borderColor: '#B4740E', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+      { type: 'line', label: 'Transactions', data: txns, borderColor: '#2D6CB5', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2, yAxisID: 'y2' }
     ]},
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => ctx.datasetIndex===0?fmt(ctx.raw):fmtNum(ctx.raw)+' txns' } } }, scales: { x: { ticks: { maxTicksLimit: d.month === 'ALL' ? 14 : 12, font: { size: 9 } } }, y: { ticks: { callback: v=>fmt(v,0) } }, y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v=>fmtNum(v), font: { size: 9 } } } } }
   });
 
   makeChart('chart-daily-txn', {
     type: 'line',
-    data: { labels: dates, datasets: [{ label: 'Transactions', data: txns, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 }] },
+    data: { labels: dates, datasets: [{ label: 'Transactions', data: txns, borderColor: '#2D6CB5', backgroundColor: 'rgba(45,108,181,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { maxTicksLimit: d.month === 'ALL' ? 14 : 12, font: { size: 9 } } }, y: { ticks: { callback: v => fmtNum(v) } } } }
   });
 
@@ -1800,8 +1817,8 @@ function renderDailyCharts(d) {
   makeChart('chart-cumulative', {
     type: 'line',
     data: { labels: dates, datasets: [
-      { label: 'Cumulative Revenue', data: cumRevs, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.08)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
-      { label: 'Target Pace', data: targetPace, borderColor: '#f87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
+      { label: 'Cumulative Revenue', data: cumRevs, borderColor: '#1E9E63', backgroundColor: 'rgba(30,158,99,0.08)', fill: true, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+      { label: 'Target Pace', data: targetPace, borderColor: '#C23A52', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
     ]},
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 9 } } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label+': '+fmtCr(ctx.raw) } } }, scales: { x: { ticks: { maxTicksLimit: isAll ? 14 : 12, font: { size: 9 } } }, y: { ticks: { callback: v => fmtCr(v) } } } }
   });
@@ -1873,7 +1890,7 @@ function renderCustomerCharts(d) {
       data: { labels: ['No data'], datasets: [{ data: [0], backgroundColor: 'transparent' }] },
       options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false },
-          title: { display: true, text: 'No customer data — re-upload to populate', color: '#8892a4', font: { size: 11 } }
+          title: { display: true, text: 'No customer data — re-upload to populate', color: '#5C6577', font: { size: 11 } }
         },
         scales: { x: { display: false }, y: { display: false } }
       }
@@ -1890,7 +1907,7 @@ function renderCustomerCharts(d) {
     const notice = document.getElementById('cust-fallback-notice') || (() => {
       const el = document.createElement('div');
       el.id = 'cust-fallback-notice';
-      el.style.cssText = 'margin:0 0 10px 0;padding:6px 12px;background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.25);border-radius:4px;font-family:var(--font-mono);font-size:10px;color:var(--gold);letter-spacing:0.05em;';
+      el.style.cssText = 'margin:0 0 10px 0;padding:6px 12px;background:rgba(200,30,58,0.08);border:1px solid rgba(200,30,58,0.25);border-radius:4px;font-family:var(--font-mono);font-size:10px;color:var(--gold);letter-spacing:0.05em;';
       el.innerHTML = '⚠ Showing product breakdown as customer proxy — <strong>re-upload with uploader v11+</strong> to populate actual customer data.';
       const panel = document.getElementById('tab-customers');
       if (panel) panel.insertBefore(el, panel.firstChild);
@@ -1928,7 +1945,7 @@ function renderCustomerCharts(d) {
     type: 'doughnut',
     data: {
       labels: [`Bulk (${bulkCount} customers)`, `Counter (${counterCount} customers)`],
-      datasets: [{ data: [bulkRev, counterRev], backgroundColor: ['#f59e0b', '#38bdf8'], borderWidth: 2, borderColor: '#161b28' }]
+      datasets: [{ data: [bulkRev, counterRev], backgroundColor: ['#B4740E', '#2D6CB5'], borderWidth: 2, borderColor: '#FFFFFF' }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '60%',
@@ -1950,8 +1967,8 @@ function renderCustomerCharts(d) {
     const typeTag = _lb_fallback
       ? `<span class="chip" style="background:rgba(100,100,100,0.1);color:var(--text-2);border:1px solid var(--rim);font-size:9px;">PRODUCT</span>`
       : (isBulk
-        ? `<span class="chip" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">BULK</span>`
-        : `<span class="chip" style="background:rgba(56,189,248,0.1);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);">COUNTER</span>`);
+        ? `<span class="chip" style="background:rgba(180,116,14,0.15);color:#B4740E;border:1px solid rgba(180,116,14,0.3);">BULK</span>`
+        : `<span class="chip" style="background:rgba(45,108,181,0.1);color:#2D6CB5;border:1px solid rgba(45,108,181,0.25);">COUNTER</span>`);
     html += `<tr>
       <td class="rank ${rc}">${i+1}</td>
       <td><strong>${c.name.length>30?c.name.slice(0,30)+'…':c.name}</strong></td>
@@ -2079,7 +2096,7 @@ function renderTargetTab(d) {
 
   makeChart('chart-target-gauge', {
     type: 'doughnut',
-    data: { labels: ['Achieved','Remaining'], datasets: [{ data: [Math.min(ytdRev,target), Math.max(0,target-ytdRev)], backgroundColor: ['#34d399','#1f2a40'], borderWidth: 0 }] },
+    data: { labels: ['Achieved','Remaining'], datasets: [{ data: [Math.min(ytdRev,target), Math.max(0,target-ytdRev)], backgroundColor: ['#1E9E63','#E8EBF1'], borderWidth: 0 }] },
     options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: ctx=>ctx.label+': '+fmtCr(ctx.raw) } } } }
   });
 
@@ -2097,9 +2114,9 @@ function renderTargetTab(d) {
   makeChart('chart-projection', {
     type: 'bar',
     data: { labels: months, datasets: [
-      { label: 'Actual', data: actuals, backgroundColor: '#34d399', borderRadius: 4 },
-      { label: 'Projected', data: projections, backgroundColor: 'rgba(245,158,11,0.3)', borderColor: '#f59e0b', borderWidth: 1, borderRadius: 4 },
-      { type: 'line', label: 'Monthly Target', data: targets, borderColor: '#f87171', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
+      { label: 'Actual', data: actuals, backgroundColor: '#1E9E63', borderRadius: 4 },
+      { label: 'Projected', data: projections, backgroundColor: 'rgba(180,116,14,0.3)', borderColor: '#B4740E', borderWidth: 1, borderRadius: 4 },
+      { type: 'line', label: 'Monthly Target', data: targets, borderColor: '#C23A52', borderDash: [4,4], borderWidth: 1.5, pointRadius: 0, backgroundColor: 'transparent' }
     ]},
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 9 } } }, tooltip: { callbacks: { label: ctx=>ctx.dataset.label+': '+fmtCr(ctx.raw||0) } } }, scales: { y: { ticks: { callback: v => fmtCr(v) } } } }
   });
