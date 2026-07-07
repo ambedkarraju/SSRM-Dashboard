@@ -42,8 +42,8 @@
 
   /* Text */
   --text-1:    #12161F;
-  --text-2:    #5C6577;
-  --text-3:    #97A0B0;
+  --text-2:    #3A4250;
+  --text-3:    #646D7B;
 
   /* Typography */
   --font-display: 'Barlow Condensed', sans-serif;
@@ -140,7 +140,7 @@ body::before {
 /* ── HEADER ─────────────────────────────────── */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,0.88);
+  background: rgba(255,255,255,0.97);
   backdrop-filter: blur(20px) saturate(1.4);
   border-bottom: 1px solid var(--border);
   padding: 0 32px;
@@ -795,7 +795,7 @@ body::before {
       <span style="font-size:22px;">⚠️</span>
       <div style="flex:1;min-width:220px;">
         <div style="font-weight:700;color:#C81E3A;font-size:13px;margin-bottom:3px;">Partial data — Products &amp; Customers tabs are empty</div>
-        <div style="color:#5C6577;font-size:12px;line-height:1.6;">A partial delete wiped product/customer aggregates for this month. <strong style="color:#12161F;">Daily KPIs and charts are correct.</strong> To restore, re-upload the surviving dates in <strong style="color:#C81E3A;">APPEND mode</strong>. <span class="ovb-dates" style="display:inline;font-family:JetBrains Mono,monospace;font-size:11px;color:#C81E3A;"></span></div>
+        <div style="color:#3A4250;font-size:12px;line-height:1.6;">A partial delete wiped product/customer aggregates for this month. <strong style="color:#12161F;">Daily KPIs and charts are correct.</strong> To restore, re-upload the surviving dates in <strong style="color:#C81E3A;">APPEND mode</strong>. <span class="ovb-dates" style="display:inline;font-family:JetBrains Mono,monospace;font-size:11px;color:#C81E3A;"></span></div>
       </div>
     </div>
     <div class="kpi-grid">
@@ -1169,7 +1169,7 @@ function makeChart(id, config) {
   chartInstances[id] = new Chart(ctx, config);
 }
 
-Chart.defaults.color = '#5C6577';
+Chart.defaults.color = '#3A4250';
 Chart.defaults.borderColor = '#E1E5EB';
 Chart.defaults.font.family = "'JetBrains Mono', monospace";
 Chart.defaults.font.size = 11;
@@ -1702,7 +1702,7 @@ function _ovPlaceholder(canvasId, cls, html) {
   if (prev) prev.remove();
   const div = document.createElement('div');
   div.className = cls;
-  div.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#5C6577;font-family:JetBrains Mono,monospace;font-size:11px;text-align:center;line-height:1.8;padding:12px;';
+  div.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100%;color:#3A4250;font-family:JetBrains Mono,monospace;font-size:11px;text-align:center;line-height:1.8;padding:12px;';
   div.innerHTML = html;
   el.parentElement.appendChild(div);
 }
@@ -1890,7 +1890,7 @@ function renderCustomerCharts(d) {
       data: { labels: ['No data'], datasets: [{ data: [0], backgroundColor: 'transparent' }] },
       options: { responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false },
-          title: { display: true, text: 'No customer data — re-upload to populate', color: '#5C6577', font: { size: 11 } }
+          title: { display: true, text: 'No customer data — re-upload to populate', color: '#3A4250', font: { size: 11 } }
         },
         scales: { x: { display: false }, y: { display: false } }
       }
